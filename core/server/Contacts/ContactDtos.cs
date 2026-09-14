@@ -1,0 +1,43 @@
+namespace server.Contacts;
+
+public record ContactSubmissionRequest(
+    string Type,
+    string? Nombres,
+    string? ApellidoPaterno,
+    string? ApellidoMaterno,
+    string? Cargo,
+    string Email,
+    string Telefono,
+    string? Linkedin,
+    string? Trabajando,
+    string? Servicio,
+    string? Sector,
+    string? RangoSalarial,
+    string? Pais,
+    string? Region,
+    string? Empresa,
+    string? Contacto,
+    string? Colaboradores,
+    string Mensaje);
+
+public record ContactSubmissionResponse(
+    int Id,
+    string Type,
+    string? Nombres,
+    string? ApellidoPaterno,
+    string? ApellidoMaterno,
+    string? Cargo,
+    string Email,
+    string Telefono,
+    string? Linkedin,
+    string? Trabajando,
+    string? Servicio,
+    string? Sector,
+    string? RangoSalarial,
+    string? Pais,
+    string? Region,
+    string? Empresa,
+    string? Contacto,
+    string? Colaboradores,
+    string Mensaje,
+    DateTime CreatedAt);

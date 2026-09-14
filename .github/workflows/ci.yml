@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-client:
+    name: Build client (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/client
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: core/client/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+  build-server:
+    name: Build server (.NET)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - run: dotnet restore
+      - run: dotnet build --no-restore --configuration Release
