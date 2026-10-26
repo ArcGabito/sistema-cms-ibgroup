@@ -44,6 +44,24 @@ export async function getPosts(): Promise<Post[]> {
 // header, which disqualifies it from the browser's back/forward cache and
 // defeats Next's own data/full-route cache. Content here doesn't need to be
 // instantaneous, so a short revalidation window is a better trade-off.
+// Public: returns null for unknown slugs and for drafts (the backend never
+// serves drafts on this endpoint).
+export async function getPublishedPostBySlug(slug: string): Promise<Post | null> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/posts/slug/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60 },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as Post;
+  } catch {
+    return null;
+  }
+}
+
 export async function getPublishedPosts(): Promise<Post[]> {
   try {
     const response = await fetch(`${BACKEND_URL}/api/posts`, { next: { revalidate: 60 } });

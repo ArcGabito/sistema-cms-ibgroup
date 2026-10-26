@@ -159,12 +159,12 @@ export default function Blog({ posts }: BlogProps) {
                       <p className="mt-3 flex-1 text-xs leading-relaxed text-ink/60">
                         {post.excerpt}
                       </p>
-                      <a
-                        href="#"
+                      <Link
+                        href={`/blog/${post.slug}`}
                         className="mt-5 inline-block w-fit rounded-full bg-brand px-5 py-2 text-[11px] font-semibold tracking-wider text-white uppercase hover:bg-brand-dark transition-colors"
                       >
                         Continuar leyendo
-                      </a>
+                      </Link>
                     </div>
                   </article>
                 </Reveal>
