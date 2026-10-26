@@ -9,15 +9,5 @@ Este repositorio contiene el ecosistema de servicios que conforman el CMS de IBG
 #### Clona el proyecto en local:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ArcGabicho/sistema-cms-ibgroup/master/scripts/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ArcGabito/sistema-cms-ibgroup/master/scripts/setup.sh | bash
 ```
-
-#### Deployar el proyecto en Azure:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ArcGabicho/sistema-cms-ibgroup/master/scripts/deploy.sh | bash
-```
-
-----
-
-Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE.md](LICENSE.md) para más detalles.

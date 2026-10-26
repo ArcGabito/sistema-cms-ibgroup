@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Container from "@/app/components/ui/Container";
-import Button from "@/app/components/ui/Button";
 import Reveal from "@/app/components/ui/Reveal";
 
 const FEATURE_CARDS = [
@@ -49,11 +48,6 @@ export default function Hero() {
               acompañamiento personalizado en la transición de carrera
               profesional.
             </p>
-            <div className="mt-10">
-              <Button href="#contacto" variant="solid">
-                Ver Programas Outplacement
-              </Button>
-            </div>
           </Reveal>
         </Container>
       </div>
