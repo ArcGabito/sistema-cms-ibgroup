@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using server.Data;
-using server.Models;
+using Server.Data;
+using Server.Models;
 
-namespace server.Auth;
+namespace Server.Auth;
 
 public record CreateUserRequest(string Username, string Password, string FullName, string Role);
 

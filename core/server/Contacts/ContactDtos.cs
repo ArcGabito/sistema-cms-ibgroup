@@ -1,4 +1,4 @@
-namespace server.Contacts;
+namespace Server.Contacts;
 
 public record ContactSubmissionRequest(
     string Type,

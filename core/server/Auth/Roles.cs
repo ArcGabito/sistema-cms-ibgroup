@@ -1,4 +1,4 @@
-namespace server.Auth;
+namespace Server.Auth;
 
 public static class Roles
 {

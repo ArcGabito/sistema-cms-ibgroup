@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using server.Data;
+using Server.Data;
 
 #nullable disable
 
-namespace server.Migrations
+namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260914060613_AddBlogPosts")]
@@ -25,7 +25,7 @@ namespace server.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("server.Models.BlogPost", b =>
+            modelBuilder.Entity("Server.Models.BlogPost", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -78,7 +78,7 @@ namespace server.Migrations
                     b.ToTable("Posts");
                 });
 
-            modelBuilder.Entity("server.Models.User", b =>
+            modelBuilder.Entity("Server.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -116,9 +116,9 @@ namespace server.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("server.Models.BlogPost", b =>
+            modelBuilder.Entity("Server.Models.BlogPost", b =>
                 {
-                    b.HasOne("server.Models.User", "Author")
+                    b.HasOne("Server.Models.User", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)

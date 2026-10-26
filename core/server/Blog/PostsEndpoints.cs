@@ -1,11 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using server.Ai;
-using server.Data;
-using server.Models;
+using Server.Ai;
+using Server.Data;
+using Server.Models;
 
-namespace server.Blog;
+namespace Server.Blog;
 
 public static class PostsEndpoints
 {

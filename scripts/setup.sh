@@ -81,7 +81,7 @@ fi
 
 if command -v dotnet >/dev/null 2>&1; then
   log "Restaurando dependencias de core/server (dotnet restore)"
-  dotnet restore core/server/server.csproj
+  dotnet restore core/server/Server.csproj
 else
   warn "'dotnet' no está disponible; se omite la restauración del backend."
 fi

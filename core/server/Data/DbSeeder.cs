@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using server.Auth;
-using server.Blog;
-using server.Models;
+using Server.Auth;
+using Server.Blog;
+using Server.Models;
 
-namespace server.Data;
+namespace Server.Data;
 
 public static class DbSeeder
 {

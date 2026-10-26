@@ -1,8 +1,8 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using server.Data;
+using Server.Data;
 
-namespace server.Analytics;
+namespace Server.Analytics;
 
 public record RoleCount(string Role, int Count);
 

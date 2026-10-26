@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using server.Data;
-using server.Models;
+using Server.Data;
+using Server.Models;
 
-namespace server.EmployabilityTest;
+namespace Server.EmployabilityTest;
 
 public static class EmployabilityTestEndpoints
 {

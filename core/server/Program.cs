@@ -2,13 +2,13 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using server.Ai;
-using server.Analytics;
-using server.Auth;
-using server.Blog;
-using server.Contacts;
-using server.Data;
-using server.EmployabilityTest;
+using Server.Ai;
+using Server.Analytics;
+using Server.Auth;
+using Server.Blog;
+using Server.Contacts;
+using Server.Data;
+using Server.EmployabilityTest;
 
 var builder = WebApplication.CreateBuilder(args);
 

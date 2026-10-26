@@ -1,5 +1,5 @@
 <Solution>
   <Folder Name="/core/">
-    <Project Path="core/server/server.csproj" />
+    <Project Path="core/server/Server.csproj" />
   </Folder>
 </Solution>

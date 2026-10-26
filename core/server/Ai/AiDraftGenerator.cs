@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
-namespace server.Ai;
+namespace Server.Ai;
 
 public record AiDraft(string Title, string Excerpt, string Content);
 

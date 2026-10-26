@@ -1,4 +1,4 @@
-namespace server.EmployabilityTest;
+namespace Server.EmployabilityTest;
 
 public record EmployabilityTestRequest(
     string Nombres,

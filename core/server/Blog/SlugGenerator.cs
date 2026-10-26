@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace server.Blog;
+namespace Server.Blog;
 
 public static class SlugGenerator
 {

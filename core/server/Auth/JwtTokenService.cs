@@ -3,9 +3,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using server.Models;
+using Server.Models;
 
-namespace server.Auth;
+namespace Server.Auth;
 
 public class JwtTokenService(IOptions<JwtOptions> options)
 {

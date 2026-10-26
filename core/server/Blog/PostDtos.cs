@@ -1,4 +1,4 @@
-namespace server.Blog;
+namespace Server.Blog;
 
 public record PostResponse(
     int Id,

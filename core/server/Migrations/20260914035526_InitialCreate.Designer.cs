@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using server.Data;
+using Server.Data;
 
 #nullable disable
 
-namespace server.Migrations
+namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260914035526_InitialCreate")]
@@ -25,7 +25,7 @@ namespace server.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("server.Models.User", b =>
+            modelBuilder.Entity("Server.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

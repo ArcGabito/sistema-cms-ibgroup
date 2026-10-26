@@ -1,4 +1,4 @@
-namespace server.Ai;
+namespace Server.Ai;
 
 public class AiOptions
 {

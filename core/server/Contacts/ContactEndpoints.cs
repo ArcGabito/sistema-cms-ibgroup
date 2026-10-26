@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using server.Data;
-using server.Models;
+using Server.Data;
+using Server.Models;
 
-namespace server.Contacts;
+namespace Server.Contacts;
 
 public static class ContactEndpoints
 {

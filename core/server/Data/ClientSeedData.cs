@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Text;
-using server.Models;
+using Server.Models;
 
-namespace server.Data;
+namespace Server.Data;
 
 // Generates fictional clients for development. A fixed seed keeps the output
 // identical across runs, and every website/email uses the reserved ".example"

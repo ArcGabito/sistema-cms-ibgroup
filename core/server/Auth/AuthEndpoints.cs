@@ -2,10 +2,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using server.Data;
-using server.Models;
+using Server.Data;
+using Server.Models;
 
-namespace server.Auth;
+namespace Server.Auth;
 
 public record LoginRequest(string Username, string Password);
 public record UserResponse(int Id, string Username, string FullName, string Role);
