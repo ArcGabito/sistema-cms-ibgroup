@@ -12,6 +12,18 @@ public static class DbSeeder
     {
         var author = await SeedAdminAsync(db, config);
         await SeedBlogPostsAsync(db, author);
+        await SeedClientsAsync(db);
+    }
+
+    private static async Task SeedClientsAsync(AppDbContext db)
+    {
+        if (await db.Clients.AnyAsync())
+        {
+            return;
+        }
+
+        db.Clients.AddRange(ClientSeedData.Generate());
+        await db.SaveChangesAsync();
     }
 
     private static async Task<User> SeedAdminAsync(AppDbContext db, IConfiguration config)

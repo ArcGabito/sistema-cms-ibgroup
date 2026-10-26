@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<BlogPost> Posts => Set<BlogPost>();
     public DbSet<ContactSubmission> ContactSubmissions => Set<ContactSubmission>();
     public DbSet<EmployabilityTestSubmission> EmployabilityTestSubmissions => Set<EmployabilityTestSubmission>();
+    public DbSet<Client> Clients => Set<Client>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +79,23 @@ public class AppDbContext : DbContext
             entity.Property(e => e.RespuestasJson).IsRequired();
             entity.Property(e => e.AutorizaDatos).HasMaxLength(16);
             entity.Property(e => e.DeseaOrientacion).HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<Client>(entity =>
+        {
+            entity.Property(c => c.CompanyName).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.LegalName).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.Industry).HasMaxLength(120);
+            entity.Property(c => c.FirstName).HasMaxLength(120);
+            entity.Property(c => c.LastName).HasMaxLength(120);
+            entity.Property(c => c.JobTitle).HasMaxLength(120);
+            entity.Property(c => c.TaxId).HasMaxLength(11);
+            entity.Property(c => c.PhoneNumber).HasMaxLength(32);
+            entity.Property(c => c.Email).HasMaxLength(200);
+            entity.Property(c => c.Website).HasMaxLength(300);
+            entity.Property(c => c.Address).HasMaxLength(300);
+            entity.Property(c => c.District).HasMaxLength(60);
+            entity.Property(c => c.Province).HasMaxLength(60);
         });
     }
 }
