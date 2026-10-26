@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { getAuthToken, BACKEND_URL } from "@/app/lib/auth";
 
 export interface Post {
@@ -36,14 +37,6 @@ export async function getPosts(): Promise<Post[]> {
   }
 }
 
-// Public: no auth token — the backend returns only published posts to
-// anonymous callers. Used by the public site (home, /blog).
-//
-// Uses time-based revalidation instead of "no-store": a page whose main
-// document is dynamically rendered gets a `Cache-Control: no-store` response
-// header, which disqualifies it from the browser's back/forward cache and
-// defeats Next's own data/full-route cache. Content here doesn't need to be
-// instantaneous, so a short revalidation window is a better trade-off.
 // Public: returns null for unknown slugs and for drafts (the backend never
 // serves drafts on this endpoint).
 export async function getPublishedPostBySlug(slug: string): Promise<Post | null> {
@@ -62,7 +55,17 @@ export async function getPublishedPostBySlug(slug: string): Promise<Post | null>
   }
 }
 
+// Public: no auth token — the backend returns only published posts to
+// anonymous callers. Used by the public site (home, /blog).
+//
+// connection() keeps the calling pages out of the build-time prerender: the
+// backend isn't reachable while the image is built, so a prerendered page
+// would ship with an empty post list until its first revalidation. The pages
+// now render per request, while the fetch itself stays in Next's data cache
+// for 60s so the backend isn't hit on every visit.
 export async function getPublishedPosts(): Promise<Post[]> {
+  await connection();
+
   try {
     const response = await fetch(`${BACKEND_URL}/api/posts`, { next: { revalidate: 60 } });
 
