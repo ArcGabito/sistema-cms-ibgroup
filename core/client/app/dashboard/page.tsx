@@ -35,12 +35,14 @@ const MODULES = [
     href: "/dashboard/clientes",
     icon: Contact2,
     description: "Revisa las consultas recibidas desde el sitio.",
+    adminOnly: true,
   },
   {
     label: "Test",
     href: "/dashboard/test",
     icon: ClipboardList,
     description: "Visualiza y gestiona los tests de empleabilidad recibidos.",
+    adminOnly: true,
   },
   {
     label: "Analíticas",
@@ -64,14 +66,17 @@ const MODULES = [
 ];
 
 export default async function DashboardHomePage() {
-  const [user, summary, clients, tests] = await Promise.all([
-    getCurrentUser(),
+  const user = await getCurrentUser();
+  const isAdmin = user?.role === "Admin";
+
+  // Submissions hold visitors' personal data, so only admins can read them.
+  const [summary, clients, tests] = await Promise.all([
     getAnalyticsSummary(),
-    getClients(),
-    getEmployabilityTests(),
+    isAdmin ? getClients() : null,
+    isAdmin ? getEmployabilityTests() : null,
   ]);
 
-  const modules = MODULES.filter((m) => !m.adminOnly || user?.role === "Admin");
+  const modules = MODULES.filter((m) => !m.adminOnly || isAdmin);
 
   return (
     <div className="flex flex-col gap-8">
@@ -88,8 +93,10 @@ export default async function DashboardHomePage() {
           value={summary?.publishedPosts ?? "—"}
           tone="success"
         />
-        <StatCard icon={Inbox} label="Consultas recibidas" value={clients.length} tone="warning" />
-        <StatCard icon={ClipboardList} label="Tests recibidos" value={tests.length} tone="brand" />
+        {clients && (
+          <StatCard icon={Inbox} label="Consultas recibidas" value={clients.length} tone="warning" />
+        )}
+        {tests && <StatCard icon={ClipboardList} label="Tests recibidos" value={tests.length} tone="brand" />}
         <StatCard icon={Users} label="Usuarios del panel" value={summary?.totalUsers ?? "—"} />
       </section>
 

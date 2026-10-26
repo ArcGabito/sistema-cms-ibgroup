@@ -29,6 +29,15 @@ builder.Services.AddScoped<AiDraftGenerator>();
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Missing Jwt configuration section.");
 
+// The signing key is never committed: it comes from the environment
+// (Jwt__Key, set from JWT_KEY in .env) or from appsettings.Development.json.
+if (Encoding.UTF8.GetByteCount(jwtOptions.Key) < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:Key is missing or shorter than 32 bytes. Set it through the Jwt__Key environment variable " +
+        "(generate one with: openssl rand -hex 32).");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -48,7 +57,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(Policies.AdminOnly, policy => policy.RequireRole(Roles.Admin))
+    .AddPolicy(Policies.ContentEditor, policy => policy.RequireRole(Roles.All));
+
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<LoginAttemptTracker>();
+builder.Services.AddAppRateLimiting();
 
 var app = builder.Build();
 
@@ -69,6 +84,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();

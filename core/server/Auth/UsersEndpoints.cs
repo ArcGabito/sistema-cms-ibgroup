@@ -13,7 +13,7 @@ public static class UsersEndpoints
     public static void MapUsersEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/users")
-            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
+            .RequireAuthorization(Policies.AdminOnly);
 
         group.MapGet("/", async (AppDbContext db) =>
         {

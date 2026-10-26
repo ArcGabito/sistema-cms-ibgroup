@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Server.Auth;
 using Server.Data;
 using Server.Models;
 
@@ -65,7 +66,7 @@ public static class ContactEndpoints
             await db.SaveChangesAsync();
 
             return Results.Created($"/api/contact/{submission.Id}", ToResponse(submission));
-        });
+        }).RequireRateLimiting(RateLimiting.PublicForms);
 
         // Dashboard-only: list and manage submissions.
         group.MapGet("/", async (AppDbContext db) =>
@@ -75,7 +76,7 @@ public static class ContactEndpoints
                 .ToListAsync();
 
             return Results.Ok(submissions.Select(ToResponse));
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.AdminOnly);
 
         group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
         {
@@ -89,7 +90,7 @@ public static class ContactEndpoints
             await db.SaveChangesAsync();
 
             return Results.NoContent();
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.AdminOnly);
     }
 
     private static ContactSubmissionResponse ToResponse(ContactSubmission c) => new(

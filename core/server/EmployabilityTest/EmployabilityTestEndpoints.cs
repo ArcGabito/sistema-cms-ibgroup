@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Server.Auth;
 using Server.Data;
 using Server.Models;
 
@@ -74,7 +75,7 @@ public static class EmployabilityTestEndpoints
             return Results.Created(
                 $"/api/employability-test/{submission.Id}",
                 new EmployabilityTestResponse(submission.Id, submission.CreatedAt));
-        });
+        }).RequireRateLimiting(RateLimiting.PublicForms);
 
         // Dashboard-only: list and manage submissions.
         group.MapGet("/", async (AppDbContext db) =>
@@ -84,7 +85,7 @@ public static class EmployabilityTestEndpoints
                 .ToListAsync();
 
             return Results.Ok(submissions.Select(ToSummary));
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.AdminOnly);
 
         group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
         {
@@ -98,7 +99,7 @@ public static class EmployabilityTestEndpoints
             await db.SaveChangesAsync();
 
             return Results.NoContent();
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.AdminOnly);
     }
 
     private static EmployabilityTestSummary ToSummary(EmployabilityTestSubmission s)

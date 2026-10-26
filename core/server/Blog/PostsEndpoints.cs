@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Server.Ai;
+using Server.Auth;
 using Server.Data;
 using Server.Models;
 
@@ -30,6 +31,17 @@ public static class PostsEndpoints
             return Results.Ok(posts.Select(ToResponse));
         });
 
+        // Public: the site's post detail page. Drafts are never served here,
+        // even to authenticated users, so a draft can't leak through a shared link.
+        group.MapGet("/slug/{slug}", async (string slug, AppDbContext db) =>
+        {
+            var post = await db.Posts
+                .Include(p => p.Author)
+                .FirstOrDefaultAsync(p => p.Slug == slug && p.Published);
+
+            return post is null ? Results.NotFound() : Results.Ok(ToResponse(post));
+        });
+
         group.MapPost("/", async (CreatePostRequest request, AppDbContext db, ClaimsPrincipal principal) =>
         {
             var validation = Validate(request.Title, request.Excerpt, request.Content);
@@ -54,7 +66,7 @@ public static class PostsEndpoints
             await db.Entry(post).Reference(p => p.Author).LoadAsync();
 
             return Results.Created($"/api/posts/{post.Id}", ToResponse(post));
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.ContentEditor);
 
         group.MapPut("/{id:int}", async (int id, UpdatePostRequest request, AppDbContext db) =>
         {
@@ -80,7 +92,7 @@ public static class PostsEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(ToResponse(post));
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.ContentEditor);
 
         group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
         {
@@ -94,7 +106,7 @@ public static class PostsEndpoints
             await db.SaveChangesAsync();
 
             return Results.NoContent();
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.ContentEditor);
 
         group.MapPost("/generate", async (
             GeneratePostRequest request,
@@ -140,7 +152,7 @@ public static class PostsEndpoints
             await db.Entry(post).Reference(p => p.Author).LoadAsync();
 
             return Results.Created($"/api/posts/{post.Id}", ToResponse(post));
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.ContentEditor);
     }
 
     private static IResult? Validate(string title, string excerpt, string content)

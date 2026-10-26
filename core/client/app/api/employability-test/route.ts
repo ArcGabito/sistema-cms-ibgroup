@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { employabilityTestSchema, type EmployabilityTestFormValues } from "@/app/lib/validations/employability-test";
 import { TEST_QUESTION_KEYS } from "@/app/lib/employability-test-data";
 import { BACKEND_URL } from "@/app/lib/auth";
+import { forwardedForHeader } from "@/app/lib/forwarded";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
   try {
     backendResponse = await fetch(`${BACKEND_URL}/api/employability-test`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...forwardedForHeader(request) },
       body: JSON.stringify(payload),
     });
   } catch {

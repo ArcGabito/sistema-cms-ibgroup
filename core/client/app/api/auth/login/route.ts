@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { loginSchema } from "@/app/lib/validations/auth";
 import { AUTH_COOKIE, BACKEND_URL } from "@/app/lib/auth";
+import { forwardedForHeader } from "@/app/lib/forwarded";
 
 interface BackendLoginResponse {
   token: string;
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   try {
     backendResponse = await fetch(`${BACKEND_URL}/api/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...forwardedForHeader(request) },
       body: JSON.stringify({
         username: parsed.data.usuario,
         password: parsed.data.contrasena,
@@ -36,6 +37,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { message: "No pudimos conectar con el servidor. Intenta nuevamente." },
       { status: 502 },
+    );
+  }
+
+  if (backendResponse.status === 429) {
+    return NextResponse.json(
+      { message: "Demasiados intentos fallidos. Espera unos minutos antes de volver a intentarlo." },
+      { status: 429 },
     );
   }
 

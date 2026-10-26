@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { contactSubmissionSchema } from "@/app/lib/validations/contact";
 import { BACKEND_URL } from "@/app/lib/auth";
+import { forwardedForHeader } from "@/app/lib/forwarded";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
   try {
     backendResponse = await fetch(`${BACKEND_URL}/api/contact`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...forwardedForHeader(request) },
       body: JSON.stringify(payload),
     });
   } catch {

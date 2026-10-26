@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Server.Auth;
 using Server.Data;
 
 namespace Server.Analytics;
@@ -50,6 +51,6 @@ public static class AnalyticsEndpoints
 
             return Results.Ok(new AnalyticsSummary(
                 totalUsers, totalPosts, publishedPosts, draftPosts, usersByRole, postsByMonth));
-        }).RequireAuthorization();
+        }).RequireAuthorization(Policies.ContentEditor);
     }
 }

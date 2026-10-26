@@ -35,7 +35,14 @@ public static class DbSeeder
         }
 
         var username = config["Seed:AdminUsername"] ?? "admin";
-        var password = config["Seed:AdminPassword"] ?? "Admin123!";
+        var password = config["Seed:AdminPassword"];
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+        {
+            throw new InvalidOperationException(
+                "Seed:AdminPassword is missing or shorter than 8 characters. Set it through the " +
+                "Seed__AdminPassword environment variable (SEED_ADMIN_PASSWORD in .env) to create the first admin.");
+        }
+
         var fullName = config["Seed:AdminFullName"] ?? "Administrador";
 
         var admin = new User

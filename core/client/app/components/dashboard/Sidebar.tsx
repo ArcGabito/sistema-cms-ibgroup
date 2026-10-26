@@ -25,8 +25,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Inicio", href: "/dashboard", icon: Home },
       { label: "Blog", href: "/dashboard/blog", icon: Newspaper },
-      { label: "Clientes", href: "/dashboard/clientes", icon: Contact2 },
-      { label: "Test", href: "/dashboard/test", icon: ClipboardList },
+      { label: "Clientes", href: "/dashboard/clientes", icon: Contact2, adminOnly: true },
+      { label: "Test", href: "/dashboard/test", icon: ClipboardList, adminOnly: true },
       { label: "Analíticas", href: "/dashboard/analiticas", icon: BarChart3 },
       { label: "Automatización IA", href: "/dashboard/automatizacion-ia", icon: Bot },
     ],

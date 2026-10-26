@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/app/lib/auth";
 import { getClients } from "@/app/lib/clients";
 import ClientsModule from "@/app/components/dashboard/ClientsModule";
 import PageHeader from "@/app/components/dashboard/ui/PageHeader";
@@ -8,6 +10,12 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardClientsPage() {
+  const user = await getCurrentUser();
+
+  if (user?.role !== "Admin") {
+    redirect("/dashboard");
+  }
+
   const clients = await getClients();
 
   return (

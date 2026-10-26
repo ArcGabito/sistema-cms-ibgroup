@@ -56,14 +56,17 @@ if [ ! -f ".env" ]; then
   if command -v openssl >/dev/null 2>&1; then
     NEW_JWT_KEY="$(openssl rand -hex 32)"
     NEW_APP_DB_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9')Aa1!"
+    NEW_SEED_ADMIN_PASSWORD="$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9')"
     TMP_ENV="$(mktemp)"
     sed \
       -e "s#^JWT_KEY=.*#JWT_KEY=$NEW_JWT_KEY#" \
       -e "s#^APP_DB_PASSWORD=.*#APP_DB_PASSWORD=$NEW_APP_DB_PASSWORD#" \
+      -e "s#^SEED_ADMIN_PASSWORD=.*#SEED_ADMIN_PASSWORD=$NEW_SEED_ADMIN_PASSWORD#" \
       .env > "$TMP_ENV" && mv "$TMP_ENV" .env
-    log "Se generaron JWT_KEY y APP_DB_PASSWORD únicos para esta instalación."
+    log "Se generaron JWT_KEY, APP_DB_PASSWORD y SEED_ADMIN_PASSWORD únicos para esta instalación."
+    log "Contraseña inicial del usuario admin: $NEW_SEED_ADMIN_PASSWORD (queda guardada en .env)"
   else
-    warn "'openssl' no está disponible; se mantienen JWT_KEY y APP_DB_PASSWORD de ejemplo. Cámbialos manualmente en .env."
+    warn "'openssl' no está disponible; completa JWT_KEY y SEED_ADMIN_PASSWORD (y cambia APP_DB_PASSWORD) en .env antes de levantar el stack."
   fi
   warn "Revisa .env y ajusta las contraseñas antes de exponer este entorno fuera de tu máquina."
 else
