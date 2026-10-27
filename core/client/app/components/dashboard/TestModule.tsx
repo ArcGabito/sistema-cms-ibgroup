@@ -7,6 +7,7 @@ import type { EmployabilityTestSubmission } from "@/app/lib/employability-tests"
 import { TEST_BLOCKS } from "@/app/lib/employability-test-data";
 import Badge from "@/app/components/dashboard/ui/Badge";
 import SearchInput from "@/app/components/dashboard/ui/SearchInput";
+import ExportButton from "@/app/components/dashboard/ui/ExportButton";
 import EmptyState from "@/app/components/dashboard/ui/EmptyState";
 import { useConfirmDialog } from "@/app/components/dashboard/ui/ConfirmDialog";
 
@@ -95,12 +96,15 @@ export default function TestModule({ initialSubmissions }: TestModuleProps) {
               {filtered.length} de {submissions.length}
             </span>
           </h2>
-          <SearchInput
-            placeholder="Buscar por nombre o email..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full sm:w-64"
-          />
+          <div className="flex w-full gap-2 sm:w-auto">
+            <SearchInput
+              placeholder="Buscar por nombre o email..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full sm:w-64"
+            />
+            <ExportButton href="/api/tests/export" />
+          </div>
         </div>
 
         <div className="mt-5 overflow-x-auto">

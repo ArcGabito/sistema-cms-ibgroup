@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Server.Ai;
 using Server.Analytics;
+using Server.Audit;
 using Server.Auth;
 using Server.Blog;
 using Server.Clients;
@@ -19,8 +20,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CurrentActor>();
+builder.Services.AddScoped<AuditInterceptor>();
+builder.Services.AddScoped<AuditLog>();
+
+builder.Services.AddDbContext<AppDbContext>((services, options) =>
+    options
+        .UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .AddInterceptors(services.GetRequiredService<AuditInterceptor>()));
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.AddSingleton<JwtTokenService>();
@@ -99,6 +107,7 @@ app.MapContactEndpoints();
 app.MapEmployabilityTestEndpoints();
 app.MapContentEndpoints();
 app.MapClientEndpoints();
+app.MapAuditEndpoints();
 
 var uploadOptions = app.Configuration.GetSection(UploadOptions.SectionName).Get<UploadOptions>() ?? new UploadOptions();
 app.MapUploadEndpoints(Path.Combine(app.Environment.ContentRootPath, uploadOptions.Path));

@@ -13,6 +13,7 @@ import {
   Building2,
   Users,
   UserCog,
+  History,
   ClipboardList,
   Menu,
   X,
@@ -48,7 +49,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Administración",
-    items: [{ label: "Usuarios", href: "/dashboard/usuarios", icon: Users, adminOnly: true }],
+    items: [
+      { label: "Usuarios", href: "/dashboard/usuarios", icon: Users, adminOnly: true },
+      { label: "Auditoría", href: "/dashboard/auditoria", icon: History, adminOnly: true },
+    ],
   },
   {
     label: "Cuenta",

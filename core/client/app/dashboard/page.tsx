@@ -12,6 +12,7 @@ import {
   Bot,
   ClipboardList,
   ArrowRight,
+  History,
 } from "lucide-react";
 import { getCurrentUser } from "@/app/lib/auth";
 import { getAnalyticsSummary } from "@/app/lib/analytics";
@@ -75,6 +76,13 @@ const MODULES = [
     href: "/dashboard/usuarios",
     icon: Users,
     description: "Administra quién tiene acceso al panel.",
+    adminOnly: true,
+  },
+  {
+    label: "Auditoría",
+    href: "/dashboard/auditoria",
+    icon: History,
+    description: "Historial de quién creó, editó o eliminó cada cosa.",
     adminOnly: true,
   },
 ];

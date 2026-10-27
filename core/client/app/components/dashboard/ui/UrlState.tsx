@@ -62,7 +62,7 @@ export function UrlSelect({
   ...props
 }: {
   name: string;
-  options: string[];
+  options: (string | { value: string; label: string })[];
   allLabel: string;
 } & Omit<SelectHTMLAttributes<HTMLSelectElement>, "name" | "value" | "onChange">) {
   const searchParams = useSearchParams();
@@ -76,11 +76,14 @@ export function UrlSelect({
       {...props}
     >
       <option value="">{allLabel}</option>
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
+      {options.map((option) => {
+        const { value, label } = typeof option === "string" ? { value: option, label: option } : option;
+        return (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        );
+      })}
     </select>
   );
 }

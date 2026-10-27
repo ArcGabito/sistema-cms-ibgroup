@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Server.Audit;
 using Server.Auth;
 using Server.Data;
 using Server.Models;
@@ -68,34 +69,10 @@ public static class ContactEndpoints
             return Results.Created($"/api/contact/{submission.Id}", ToResponse(submission));
         }).RequireRateLimiting(RateLimiting.PublicForms);
 
-        // Dashboard-only: list and manage submissions, newest first. `q`
-        // matches names, company, email and phone; `type` is Personas/Empresas.
+        // Dashboard-only: list (filtered and sorted by Filter) and manage submissions.
         group.MapGet("/", async (AppDbContext db, int? page, int? pageSize, string? q, string? type) =>
         {
-            var query = db.ContactSubmissions.AsNoTracking();
-
-            if (type is not null && ValidTypes.Contains(type))
-            {
-                query = query.Where(c => c.Type == type);
-            }
-
-            var search = Paging.CleanQuery(q);
-            if (search is not null)
-            {
-                query = query.Where(c =>
-                    (c.Nombres != null && c.Nombres.Contains(search)) ||
-                    (c.ApellidoPaterno != null && c.ApellidoPaterno.Contains(search)) ||
-                    (c.ApellidoMaterno != null && c.ApellidoMaterno.Contains(search)) ||
-                    (c.Empresa != null && c.Empresa.Contains(search)) ||
-                    (c.Contacto != null && c.Contacto.Contains(search)) ||
-                    c.Email.Contains(search) ||
-                    c.Telefono.Contains(search));
-            }
-
-            var result = await query
-                .OrderByDescending(c => c.CreatedAt)
-                .ThenByDescending(c => c.Id)
-                .ToPagedAsync(page, pageSize, ToResponse);
+            var result = await Filter(db, q, type).ToPagedAsync(page, pageSize, ToResponse);
 
             // Totals per type for the filter chips, regardless of the current filter.
             var counts = await db.ContactSubmissions
@@ -112,6 +89,27 @@ public static class ContactEndpoints
                 counts.GetValueOrDefault("Empresas")));
         }).RequireAuthorization(Policies.AdminOnly);
 
+        // Same filters as the list, every matching row.
+        group.MapGet("/export", async (AppDbContext db, AuditLog audit, string? q, string? type) =>
+        {
+            var rows = await Filter(db, q, type).ToListAsync();
+            await audit.RecordAsync(AuditActions.Export, "ContactSubmission", null, $"{rows.Count} consultas");
+
+            return Csv.File(
+                $"consultas-{Csv.Stamp()}.csv",
+                [
+                    "Id", "Fecha (UTC)", "Tipo", "Nombres", "Apellido paterno", "Apellido materno", "Empresa",
+                    "Persona de contacto", "Cargo", "Email", "Teléfono", "LinkedIn", "Trabajando", "Servicio",
+                    "Sector", "Rango salarial", "País", "Región", "Colaboradores", "Mensaje",
+                ],
+                rows.Select(c => (IReadOnlyList<object?>)
+                [
+                    c.Id, c.CreatedAt, c.Type, c.Nombres, c.ApellidoPaterno, c.ApellidoMaterno, c.Empresa,
+                    c.Contacto, c.Cargo, c.Email, c.Telefono, c.Linkedin, c.Trabajando, c.Servicio,
+                    c.Sector, c.RangoSalarial, c.Pais, c.Region, c.Colaboradores, c.Mensaje,
+                ]));
+        }).RequireAuthorization(Policies.AdminOnly);
+
         group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
         {
             var submission = await db.ContactSubmissions.FindAsync(id);
@@ -125,6 +123,32 @@ public static class ContactEndpoints
 
             return Results.NoContent();
         }).RequireAuthorization(Policies.AdminOnly);
+    }
+
+    // Newest first. `q` matches names, company, email and phone; `type` is Personas/Empresas.
+    private static IQueryable<ContactSubmission> Filter(AppDbContext db, string? q, string? type)
+    {
+        var query = db.ContactSubmissions.AsNoTracking();
+
+        if (type is not null && ValidTypes.Contains(type))
+        {
+            query = query.Where(c => c.Type == type);
+        }
+
+        var search = Paging.CleanQuery(q);
+        if (search is not null)
+        {
+            query = query.Where(c =>
+                (c.Nombres != null && c.Nombres.Contains(search)) ||
+                (c.ApellidoPaterno != null && c.ApellidoPaterno.Contains(search)) ||
+                (c.ApellidoMaterno != null && c.ApellidoMaterno.Contains(search)) ||
+                (c.Empresa != null && c.Empresa.Contains(search)) ||
+                (c.Contacto != null && c.Contacto.Contains(search)) ||
+                c.Email.Contains(search) ||
+                c.Telefono.Contains(search));
+        }
+
+        return query.OrderByDescending(c => c.CreatedAt).ThenByDescending(c => c.Id);
     }
 
     private static ContactSubmissionResponse ToResponse(ContactSubmission c) => new(

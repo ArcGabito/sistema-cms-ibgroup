@@ -8,6 +8,7 @@ import { Contact2, Trash2 } from "lucide-react";
 import type { ConsultasPage, ContactSubmission } from "@/app/lib/consultas";
 import Badge from "@/app/components/dashboard/ui/Badge";
 import { Pagination, UrlSearch } from "@/app/components/dashboard/ui/UrlState";
+import ExportButton from "@/app/components/dashboard/ui/ExportButton";
 import EmptyState from "@/app/components/dashboard/ui/EmptyState";
 import { useConfirmDialog } from "@/app/components/dashboard/ui/ConfirmDialog";
 
@@ -113,7 +114,11 @@ export default function ConsultasModule({ data }: ConsultasModuleProps) {
               </Link>
             ))}
           </div>
-          <UrlSearch placeholder="Buscar por nombre, empresa, email o teléfono..." className="w-full sm:w-72" />
+          <div className="flex w-full gap-2 sm:w-auto">
+            <UrlSearch placeholder="Buscar por nombre, empresa, email o teléfono..." className="w-full sm:w-72" />
+            {/* Exports what the current search and type filter show, across every page. */}
+            <ExportButton href={`/api/consultas/export?${searchParams.toString()}`} />
+          </div>
         </div>
 
         <div className="mt-5 overflow-x-auto">

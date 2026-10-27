@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Server.Audit;
 using Server.Auth;
 using Server.Data;
 using Server.Models;
@@ -85,6 +86,47 @@ public static class EmployabilityTestEndpoints
                 .ToListAsync();
 
             return Results.Ok(submissions.Select(ToSummary));
+        }).RequireAuthorization(Policies.AdminOnly);
+
+        // One row per test, one column per answered question (q1, q2, ...).
+        group.MapGet("/export", async (AppDbContext db, AuditLog audit) =>
+        {
+            var submissions = await db.EmployabilityTestSubmissions
+                .AsNoTracking()
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync();
+            await audit.RecordAsync(AuditActions.Export, "EmployabilityTestSubmission", null, $"{submissions.Count} tests");
+
+            var answers = submissions.ToDictionary(
+                s => s.Id,
+                s => JsonSerializer.Deserialize<Dictionary<string, string>>(s.RespuestasJson) ?? []);
+
+            // "q10" sorts after "q9", not after "q1".
+            var questionKeys = answers.Values
+                .SelectMany(a => a.Keys)
+                .Distinct()
+                .OrderBy(k => int.TryParse(k.TrimStart('q'), out var n) ? n : int.MaxValue)
+                .ThenBy(k => k, StringComparer.Ordinal)
+                .ToList();
+
+            string[] fixedHeaders =
+            [
+                "Id", "Fecha (UTC)", "Nombres", "Apellido paterno", "Apellido materno", "Email", "Teléfono",
+                "LinkedIn", "País", "Departamento", "Edad", "Nivel profesional", "Industria", "Trabajando",
+                "Último salario", "Puntaje total", "Puntaje promedio", "Autoriza datos", "Desea orientación",
+            ];
+
+            return Csv.File(
+                $"tests-empleabilidad-{Csv.Stamp()}.csv",
+                [.. fixedHeaders, .. questionKeys.Select(k => k.ToUpperInvariant())],
+                submissions.Select(s => (IReadOnlyList<object?>)
+                [
+                    s.Id, s.CreatedAt, s.Nombres, s.ApellidoPaterno, s.ApellidoMaterno, s.Email, s.Telefono,
+                    s.TieneLinkedin, s.Pais, s.Departamento, s.Edad, s.NivelProfesional, s.Industria,
+                    s.ActualmenteTrabajando, s.UltimoSalario, s.PuntajeTotal, s.PuntajePromedio, s.AutorizaDatos,
+                    s.DeseaOrientacion,
+                    .. questionKeys.Select(k => (object?)answers[s.Id].GetValueOrDefault(k)),
+                ]));
         }).RequireAuthorization(Policies.AdminOnly);
 
         group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>

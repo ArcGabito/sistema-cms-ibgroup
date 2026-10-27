@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<FaqItem> Faqs => Set<FaqItem>();
     public DbSet<CountryItem> Countries => Set<CountryItem>();
     public DbSet<StatChart> StatCharts => Set<StatChart>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -85,6 +86,18 @@ public class AppDbContext : DbContext
             entity.Property(e => e.RespuestasJson).IsRequired();
             entity.Property(e => e.AutorizaDatos).HasMaxLength(16);
             entity.Property(e => e.DeseaOrientacion).HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<AuditEntry>(entity =>
+        {
+            entity.Property(a => a.Username).HasMaxLength(64).IsRequired();
+            entity.Property(a => a.Action).HasMaxLength(16).IsRequired();
+            entity.Property(a => a.EntityType).HasMaxLength(64).IsRequired();
+            entity.Property(a => a.EntityId).HasMaxLength(64);
+            entity.Property(a => a.Label).HasMaxLength(200);
+            entity.Property(a => a.Details).HasMaxLength(1000);
+            entity.HasIndex(a => a.At);
+            entity.HasIndex(a => new { a.EntityType, a.At });
         });
 
         modelBuilder.Entity<ServiceItem>(entity =>
