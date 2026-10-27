@@ -1,3 +1,7 @@
+# Development stack: the client and server images plus a SQL Server
+# instance. The db service is for local development only — in production,
+# run the two images against a managed database instead, by setting the
+# server's ConnectionStrings__DefaultConnection.
 services:
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -17,22 +21,6 @@ services:
       retries: 10
       start_period: 30s
 
-  db-init:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: ibgroup-db-init
-    entrypoint: ["bash", "/opt/init/init.sh"]
-    environment:
-      DB_HOST: db
-      SA_PASSWORD: ${DB_SA_PASSWORD:?Set DB_SA_PASSWORD in .env (repo root)}
-      APP_DB_NAME: IBGroupCMS
-      APP_DB_USER: ${APP_DB_USER:-ibgroup_app}
-      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env (repo root)}
-    volumes:
-      - ./database:/opt/init:ro
-    depends_on:
-      db:
-        condition: service_healthy
-
   server:
     build:
       context: ..
@@ -40,7 +28,9 @@ services:
     container_name: ibgroup-server
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: Server=db,1433;Database=IBGroupCMS;User Id=${APP_DB_USER:-ibgroup_app};Password=${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env (repo root)};TrustServerCertificate=True
+      # Development only: connects as sa, and EF Core creates the database
+      # and applies the migrations on startup.
+      ConnectionStrings__DefaultConnection: Server=db,1433;Database=IBGroupCMS;User Id=sa;Password=${DB_SA_PASSWORD:?Set DB_SA_PASSWORD in .env (repo root)};TrustServerCertificate=True
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in .env (repo root)}
       Jwt__Issuer: IBGroupCMS
       Jwt__Audience: IBGroupCMS
@@ -55,8 +45,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      db-init:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
 
   client:
     build:

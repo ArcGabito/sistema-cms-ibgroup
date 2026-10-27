@@ -6,3 +6,6 @@
 **/*.tsbuildinfo
 **/.vscode
 **/.vs
+**/.env
+**/.env.*
+**/appsettings.Development.json

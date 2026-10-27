@@ -10,17 +10,13 @@ cd "$ROOT_DIR"
 
 COMPOSE_FILE="docker/docker-compose.yml"
 
-# Compose still needs to interpolate the file's ${VAR} placeholders for a
-# `down`, so fall back to .env.example if .env was already removed.
-ENV_FILE=""
-if [ -f ".env" ]; then
-  ENV_FILE=".env"
-elif [ -f ".env.example" ]; then
-  ENV_FILE=".env.example"
-fi
+# Compose interpolates the file's required ${VAR:?} placeholders even for a
+# `down`, which never uses their values. Placeholders keep it working when
+# .env is missing or incomplete (shell variables take precedence over it).
+export DB_SA_PASSWORD="placeholder" JWT_KEY="placeholder" SEED_ADMIN_PASSWORD="placeholder"
 
 ENV_FILE_ARGS=()
-[ -n "$ENV_FILE" ] && ENV_FILE_ARGS=(--env-file "$ENV_FILE")
+[ -f ".env" ] && ENV_FILE_ARGS=(--env-file ".env")
 
 FORCE=false
 for arg in "$@"; do
