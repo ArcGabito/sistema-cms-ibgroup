@@ -1,236 +1,237 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
-import { Contact2, Trash2 } from "lucide-react";
-import type { ClientSubmission } from "@/app/lib/clients";
-import Badge from "@/app/components/dashboard/ui/Badge";
-import SearchInput from "@/app/components/dashboard/ui/SearchInput";
+import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
+import Button from "@/app/components/ui/Button";
+import { TextField } from "@/app/components/forms/FormFields";
 import EmptyState from "@/app/components/dashboard/ui/EmptyState";
+import Modal from "@/app/components/dashboard/ui/Modal";
 import { useConfirmDialog } from "@/app/components/dashboard/ui/ConfirmDialog";
+import { Pagination, UrlSearch, UrlSelect } from "@/app/components/dashboard/ui/UrlState";
+import type { Client, ClientFilters } from "@/app/lib/clients";
+import type { Paged } from "@/app/lib/paging";
+import { clientSchema, type ClientFormValues } from "@/app/lib/validations/client";
 
 interface ClientsModuleProps {
-  initialClients: ClientSubmission[];
+  data: Paged<Client>;
+  filters: ClientFilters;
 }
 
-type TypeFilter = "Todos" | "Personas" | "Empresas";
+const CONNECTION_ERROR = {
+  title: "Error de conexión",
+  description: "No pudimos conectar con el servidor. Intenta nuevamente.",
+};
 
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold tracking-wider text-ink/40 uppercase">{label}</p>
-      <p className="mt-0.5 text-ink">{value}</p>
-    </div>
-  );
-}
+const contactName = (c: Client) => [c.firstName, c.lastName].filter(Boolean).join(" ");
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleString("es-PE", { dateStyle: "medium", timeStyle: "short" });
-}
-
-export default function ClientsModule({ initialClients }: ClientsModuleProps) {
-  const [clients, setClients] = useState(initialClients);
-  const [selectedId, setSelectedId] = useState<number | null>(initialClients[0]?.id ?? null);
-  const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("Todos");
+export default function ClientsModule({ data, filters }: ClientsModuleProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [editing, setEditing] = useState<Client | "new" | null>(null);
   const { confirm, dialog } = useConfirmDialog();
+  const filtered = ["q", "industry", "province"].some((key) => searchParams.get(key)) || data.page > 1;
 
-  const displayName = (c: ClientSubmission) =>
-    c.type === "Empresas" ? (c.empresa ?? "—") : [c.nombres, c.apellidoPaterno].filter(Boolean).join(" ");
-
-  const filteredClients = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return clients.filter((c) => {
-      if (typeFilter !== "Todos" && c.type !== typeFilter) return false;
-      if (!q) return true;
-      return displayName(c).toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
-    });
-  }, [clients, query, typeFilter]);
-
-  const selected = clients.find((c) => c.id === selectedId) ?? null;
-
-  const personasCount = clients.filter((c) => c.type === "Personas").length;
-  const empresasCount = clients.filter((c) => c.type === "Empresas").length;
-
-  const handleDelete = async (client: ClientSubmission, event?: React.MouseEvent) => {
-    event?.stopPropagation();
-    const label = displayName(client);
-
+  const onDelete = async (client: Client) => {
     const ok = await confirm({
-      title: "¿Eliminar este contacto?",
-      description: `Se eliminará la consulta de "${label}" de forma permanente. Esta acción no se puede deshacer.`,
+      title: `¿Eliminar a ${client.companyName}?`,
+      description: "Se eliminará el cliente y sus datos de contacto. Esta acción no se puede deshacer.",
     });
     if (!ok) return;
 
     try {
       const response = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
-
       if (!response.ok) {
-        sileo.error({ title: "No se pudo eliminar", description: "Inténtalo nuevamente." });
+        const body = await response.json().catch(() => null);
+        sileo.error({ title: "No se pudo eliminar", description: body?.message ?? "Inténtalo nuevamente." });
         return;
       }
-
-      setClients((prev) => prev.filter((c) => c.id !== client.id));
-      if (selectedId === client.id) {
-        setSelectedId(null);
-      }
-      sileo.success({ title: "Contacto eliminado", description: label });
+      sileo.success({ title: "Cliente eliminado", description: client.companyName });
+      router.refresh();
     } catch {
-      sileo.error({
-        title: "Error de conexión",
-        description: "No pudimos conectar con el servidor. Intenta nuevamente.",
-      });
+      sileo.error(CONNECTION_ERROR);
     }
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-      {dialog}
-
-      <div className="rounded-lg border border-black/10 bg-white p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            {(["Todos", "Personas", "Empresas"] as TypeFilter[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTypeFilter(t)}
-                className={`rounded-full px-4 py-2 text-xs font-semibold tracking-wide uppercase transition-colors ${
-                  typeFilter === t
-                    ? "bg-ink text-white"
-                    : "border border-ink/15 text-ink/60 hover:border-brand hover:text-brand"
-                }`}
-              >
-                {t}
-                {t === "Personas" && ` (${personasCount})`}
-                {t === "Empresas" && ` (${empresasCount})`}
-                {t === "Todos" && ` (${clients.length})`}
-              </button>
-            ))}
-          </div>
-          <SearchInput
-            placeholder="Buscar por nombre o email..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full sm:w-64"
-          />
+    <div className="rounded-lg border border-black/10 bg-white p-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+          <UrlSearch placeholder="Buscar por empresa, contacto, RUC o email..." className="w-full sm:max-w-sm" />
+          <UrlSelect name="industry" options={filters.industries} allLabel="Todos los rubros" aria-label="Rubro" />
+          <UrlSelect name="province" options={filters.provinces} allLabel="Todas las provincias" aria-label="Provincia" />
         </div>
+        <Button type="button" onClick={() => setEditing("new")} className="px-5 py-2.5">
+          <Plus className="h-4 w-4" /> Nuevo cliente
+        </Button>
+      </div>
 
-        <div className="mt-5 overflow-x-auto">
-          {filteredClients.length === 0 ? (
-            <EmptyState
-              icon={Contact2}
-              title={clients.length === 0 ? "Todavía no hay consultas" : "Sin resultados"}
-              description={
-                clients.length === 0
-                  ? "Las consultas enviadas desde el sitio aparecerán aquí."
-                  : "Ajusta la búsqueda o el filtro para ver otras consultas."
-              }
-            />
-          ) : (
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-black/10 text-xs font-semibold tracking-wider text-ink/40 uppercase">
-                  <th className="pb-3">Tipo</th>
-                  <th className="pb-3">Nombre</th>
-                  <th className="pb-3">Contacto</th>
-                  <th className="pb-3">Servicio</th>
-                  <th className="pb-3">Fecha</th>
-                  <th className="pb-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {filteredClients.map((client) => (
-                  <tr
-                    key={client.id}
-                    onClick={() => setSelectedId(client.id)}
-                    className={`cursor-pointer border-b border-black/5 last:border-0 ${
-                      selectedId === client.id ? "bg-surface" : "hover:bg-surface/60"
-                    }`}
-                  >
-                    <td className="py-3">
-                      <Badge tone={client.type === "Empresas" ? "info" : "warning"}>
-                        {client.type === "Empresas" ? "Empresa" : "Persona"}
-                      </Badge>
-                    </td>
-                    <td className="max-w-xs truncate py-3 font-medium text-ink">{displayName(client)}</td>
-                    <td className="py-3 text-ink/70">{client.email}</td>
-                    <td className="py-3 text-ink/70">{client.servicio ?? "—"}</td>
-                    <td className="py-3 whitespace-nowrap text-ink/50">
-                      {new Date(client.createdAt).toLocaleDateString("es-PE")}
-                    </td>
-                    <td className="py-3">
+      <div className="mt-5 overflow-x-auto">
+        {data.items.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title={filtered ? "Sin resultados" : "Todavía no hay clientes"}
+            description={filtered ? "Ajusta la búsqueda o los filtros." : "Crea el primero con el botón Nuevo cliente."}
+          />
+        ) : (
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-black/10 text-xs font-semibold tracking-wider text-ink/40 uppercase">
+                <th className="pb-3">Empresa</th>
+                <th className="pb-3">RUC</th>
+                <th className="pb-3">Rubro</th>
+                <th className="pb-3">Contacto</th>
+                <th className="pb-3">Ubicación</th>
+                <th className="pb-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((c) => (
+                <tr key={c.id} className="border-b border-black/5 align-top last:border-0 hover:bg-surface/60">
+                  <td className="max-w-xs py-3">
+                    <p className="truncate font-medium text-ink">{c.companyName}</p>
+                    <p className="truncate text-xs text-ink/40">{c.legalName}</p>
+                  </td>
+                  <td className="py-3 whitespace-nowrap text-ink/70">{c.taxId ?? "—"}</td>
+                  <td className="max-w-[12rem] truncate py-3 text-ink/70">{c.industry ?? "—"}</td>
+                  <td className="max-w-[14rem] py-3">
+                    <p className="truncate text-ink/80">{contactName(c) || "—"}</p>
+                    {(c.email || c.jobTitle) && (
+                      <p className="truncate text-xs text-ink/40">{c.email ?? c.jobTitle}</p>
+                    )}
+                  </td>
+                  <td className="py-3 whitespace-nowrap text-ink/70">
+                    {[c.district, c.province].filter(Boolean).join(", ") || "—"}
+                  </td>
+                  <td className="py-3">
+                    <div className="flex justify-end gap-1">
                       <button
                         type="button"
+                        title="Editar"
+                        aria-label="Editar"
+                        onClick={() => setEditing(c)}
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-ink/50 hover:bg-black/5 hover:text-ink"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Eliminar"
                         aria-label="Eliminar"
-                        onClick={(e) => handleDelete(client, e)}
-                        className="text-ink/40 hover:text-brand"
+                        onClick={() => onDelete(c)}
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-ink/50 hover:bg-black/5 hover:text-brand"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-black/10 bg-white p-6">
-        <h2 className="font-heading text-base font-bold text-ink">Detalle</h2>
-        {selected ? (
-          <div className="mt-5 flex flex-col gap-3 text-sm">
-            <DetailRow
-              label={selected.type === "Empresas" ? "Empresa" : "Nombre"}
-              value={displayName(selected)}
-            />
-            {selected.type === "Empresas" && selected.contacto && (
-              <DetailRow label="Persona de contacto" value={selected.contacto} />
-            )}
-            <DetailRow label="Email" value={selected.email} />
-            <DetailRow label="Teléfono" value={selected.telefono} />
-            {selected.cargo && <DetailRow label="Cargo" value={selected.cargo} />}
-            {selected.servicio && <DetailRow label="Servicio" value={selected.servicio} />}
-            {selected.type === "Personas" && selected.trabajando && (
-              <DetailRow label="¿Trabajando actualmente?" value={selected.trabajando} />
-            )}
-            {selected.type === "Personas" && selected.sector && (
-              <DetailRow label="Sector" value={selected.sector} />
-            )}
-            {selected.type === "Personas" && selected.rangoSalarial && (
-              <DetailRow label="Rango salarial" value={selected.rangoSalarial} />
-            )}
-            {selected.type === "Personas" && (selected.pais || selected.region) && (
-              <DetailRow
-                label="Ubicación"
-                value={[selected.region, selected.pais].filter(Boolean).join(", ")}
-              />
-            )}
-            {selected.type === "Personas" && selected.linkedin && (
-              <DetailRow label="LinkedIn" value={selected.linkedin} />
-            )}
-            {selected.type === "Empresas" && selected.colaboradores && (
-              <DetailRow label="Colaboradores a desvincular" value={selected.colaboradores} />
-            )}
-            <div>
-              <p className="text-xs font-semibold tracking-wider text-ink/40 uppercase">Mensaje</p>
-              <p className="mt-1 leading-relaxed text-ink/70">{selected.mensaje}</p>
-            </div>
-            <p className="text-xs text-ink/40">Recibido el {formatDate(selected.createdAt)}</p>
-            <button
-              type="button"
-              onClick={() => handleDelete(selected)}
-              className="mt-2 inline-flex w-fit items-center gap-2 text-xs font-semibold text-brand hover:text-brand-dark"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Eliminar contacto
-            </button>
-          </div>
-        ) : (
-          <p className="mt-5 text-sm text-ink/40">Selecciona una consulta para ver el detalle.</p>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
+
+      <Pagination page={data.page} pageSize={data.pageSize} total={data.total} />
+
+      {editing && (
+        <Modal
+          title={editing === "new" ? "Nuevo cliente" : `Editar ${editing.companyName}`}
+          onClose={() => setEditing(null)}
+          size="lg"
+        >
+          <ClientForm
+            initial={editing === "new" ? undefined : editing}
+            onSaved={() => {
+              setEditing(null);
+              router.refresh();
+            }}
+          />
+        </Modal>
+      )}
+      {dialog}
     </div>
+  );
+}
+
+function ClientForm({ initial, onSaved }: { initial?: Client; onSaved: () => void }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ClientFormValues>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: {
+      companyName: initial?.companyName ?? "",
+      legalName: initial?.legalName ?? "",
+      industry: initial?.industry ?? "",
+      taxId: initial?.taxId ?? "",
+      firstName: initial?.firstName ?? "",
+      lastName: initial?.lastName ?? "",
+      jobTitle: initial?.jobTitle ?? "",
+      email: initial?.email ?? "",
+      phoneNumber: initial?.phoneNumber ?? "",
+      website: initial?.website ?? "",
+      address: initial?.address ?? "",
+      district: initial?.district ?? "",
+      province: initial?.province ?? "",
+    },
+  });
+
+  const onSubmit = async (values: ClientFormValues) => {
+    try {
+      const response = await fetch(initial ? `/api/clients/${initial.id}` : "/api/clients", {
+        method: initial ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const body = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        sileo.error({ title: "No se pudo guardar", description: body?.message ?? "Inténtalo nuevamente." });
+        return;
+      }
+
+      sileo.success({ title: initial ? "Cliente actualizado" : "Cliente creado", description: values.companyName });
+      onSaved();
+    } catch {
+      sileo.error(CONNECTION_ERROR);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-semibold text-ink">Empresa</legend>
+        <TextField label="Nombre comercial" error={errors.companyName} {...register("companyName")} />
+        <TextField label="Razón social" error={errors.legalName} {...register("legalName")} />
+        <TextField label="RUC" inputMode="numeric" maxLength={11} error={errors.taxId} {...register("taxId")} />
+        <TextField label="Rubro" error={errors.industry} {...register("industry")} />
+        <TextField label="Sitio web" error={errors.website} {...register("website")} className="sm:col-span-2" />
+      </fieldset>
+
+      <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-semibold text-ink">Persona de contacto</legend>
+        <TextField label="Nombres" error={errors.firstName} {...register("firstName")} />
+        <TextField label="Apellidos" error={errors.lastName} {...register("lastName")} />
+        <TextField label="Cargo" error={errors.jobTitle} {...register("jobTitle")} />
+        <TextField label="Teléfono" error={errors.phoneNumber} {...register("phoneNumber")} />
+        <TextField label="Email" type="email" error={errors.email} {...register("email")} className="sm:col-span-2" />
+      </fieldset>
+
+      <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-semibold text-ink">Ubicación</legend>
+        <TextField label="Dirección" error={errors.address} {...register("address")} className="sm:col-span-2" />
+        <TextField label="Distrito" error={errors.district} {...register("district")} />
+        <TextField label="Provincia" error={errors.province} {...register("province")} />
+      </fieldset>
+
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Guardando..." : "Guardar"}
+      </Button>
+    </form>
   );
 }

@@ -68,14 +68,48 @@ public static class ContactEndpoints
             return Results.Created($"/api/contact/{submission.Id}", ToResponse(submission));
         }).RequireRateLimiting(RateLimiting.PublicForms);
 
-        // Dashboard-only: list and manage submissions.
-        group.MapGet("/", async (AppDbContext db) =>
+        // Dashboard-only: list and manage submissions, newest first. `q`
+        // matches names, company, email and phone; `type` is Personas/Empresas.
+        group.MapGet("/", async (AppDbContext db, int? page, int? pageSize, string? q, string? type) =>
         {
-            var submissions = await db.ContactSubmissions
-                .OrderByDescending(c => c.CreatedAt)
-                .ToListAsync();
+            var query = db.ContactSubmissions.AsNoTracking();
 
-            return Results.Ok(submissions.Select(ToResponse));
+            if (type is not null && ValidTypes.Contains(type))
+            {
+                query = query.Where(c => c.Type == type);
+            }
+
+            var search = Paging.CleanQuery(q);
+            if (search is not null)
+            {
+                query = query.Where(c =>
+                    (c.Nombres != null && c.Nombres.Contains(search)) ||
+                    (c.ApellidoPaterno != null && c.ApellidoPaterno.Contains(search)) ||
+                    (c.ApellidoMaterno != null && c.ApellidoMaterno.Contains(search)) ||
+                    (c.Empresa != null && c.Empresa.Contains(search)) ||
+                    (c.Contacto != null && c.Contacto.Contains(search)) ||
+                    c.Email.Contains(search) ||
+                    c.Telefono.Contains(search));
+            }
+
+            var result = await query
+                .OrderByDescending(c => c.CreatedAt)
+                .ThenByDescending(c => c.Id)
+                .ToPagedAsync(page, pageSize, ToResponse);
+
+            // Totals per type for the filter chips, regardless of the current filter.
+            var counts = await db.ContactSubmissions
+                .GroupBy(c => c.Type)
+                .Select(g => new { Type = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.Type, g => g.Count);
+
+            return Results.Ok(new ContactSubmissionPage(
+                result.Items,
+                result.Total,
+                result.Page,
+                result.PageSize,
+                counts.GetValueOrDefault("Personas"),
+                counts.GetValueOrDefault("Empresas")));
         }).RequireAuthorization(Policies.AdminOnly);
 
         group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>

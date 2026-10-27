@@ -7,7 +7,7 @@ import {
   Users,
   Newspaper,
   LayoutGrid,
-  Contact2,
+  Building2,
   BarChart3,
   Bot,
   ClipboardList,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "@/app/lib/auth";
 import { getAnalyticsSummary } from "@/app/lib/analytics";
-import { getClients } from "@/app/lib/clients";
+import { getConsultas } from "@/app/lib/consultas";
 import { getEmployabilityTests } from "@/app/lib/employability-tests";
 import PageHeader from "@/app/components/dashboard/ui/PageHeader";
 import StatCard from "@/app/components/dashboard/ui/StatCard";
@@ -38,10 +38,17 @@ const MODULES = [
     description: "Servicios, preguntas frecuentes, estadísticas y países del sitio.",
   },
   {
+    label: "Consultas",
+    href: "/dashboard/consultas",
+    icon: Inbox,
+    description: "Revisa las consultas recibidas desde el sitio.",
+    adminOnly: true,
+  },
+  {
     label: "Clientes",
     href: "/dashboard/clientes",
-    icon: Contact2,
-    description: "Revisa las consultas recibidas desde el sitio.",
+    icon: Building2,
+    description: "Empresas clientes: búsqueda, filtros y edición.",
     adminOnly: true,
   },
   {
@@ -77,9 +84,10 @@ export default async function DashboardHomePage() {
   const isAdmin = user?.role === "Admin";
 
   // Submissions hold visitors' personal data, so only admins can read them.
-  const [summary, clients, tests] = await Promise.all([
+  // Only the total is needed here, so ask for a one-row page.
+  const [summary, consultas, tests] = await Promise.all([
     getAnalyticsSummary(),
-    isAdmin ? getClients() : null,
+    isAdmin ? getConsultas({ pageSize: 1 }) : null,
     isAdmin ? getEmployabilityTests() : null,
   ]);
 
@@ -100,8 +108,8 @@ export default async function DashboardHomePage() {
           value={summary?.publishedPosts ?? "—"}
           tone="success"
         />
-        {clients && (
-          <StatCard icon={Inbox} label="Consultas recibidas" value={clients.length} tone="warning" />
+        {consultas && (
+          <StatCard icon={Inbox} label="Consultas recibidas" value={consultas.total} tone="warning" />
         )}
         {tests && <StatCard icon={ClipboardList} label="Tests recibidos" value={tests.length} tone="brand" />}
         <StatCard icon={Users} label="Usuarios del panel" value={summary?.totalUsers ?? "—"} />

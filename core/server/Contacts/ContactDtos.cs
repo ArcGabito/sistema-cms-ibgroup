@@ -41,3 +41,11 @@ public record ContactSubmissionResponse(
     string? Colaboradores,
     string Mensaje,
     DateTime CreatedAt);
+
+public record ContactSubmissionPage(
+    List<ContactSubmissionResponse> Items,
+    int Total,
+    int Page,
+    int PageSize,
+    int PersonasCount,
+    int EmpresasCount);

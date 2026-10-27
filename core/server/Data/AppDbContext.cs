@@ -65,6 +65,7 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Empresa).HasMaxLength(200);
             entity.Property(c => c.Contacto).HasMaxLength(120);
             entity.Property(c => c.Colaboradores).HasMaxLength(60);
+            entity.HasIndex(c => c.CreatedAt);
         });
 
         modelBuilder.Entity<EmployabilityTestSubmission>(entity =>
@@ -133,6 +134,8 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Address).HasMaxLength(300);
             entity.Property(c => c.District).HasMaxLength(60);
             entity.Property(c => c.Province).HasMaxLength(60);
+            entity.HasIndex(c => c.CompanyName);
+            entity.HasIndex(c => c.TaxId);
         });
     }
 }

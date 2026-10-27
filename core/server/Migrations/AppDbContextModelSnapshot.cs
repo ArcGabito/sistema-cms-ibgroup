@@ -142,6 +142,10 @@ namespace Server.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyName");
+
+                    b.HasIndex("TaxId");
+
                     b.ToTable("Clients");
                 });
 
@@ -232,6 +236,8 @@ namespace Server.Migrations
                         .HasColumnType("nvarchar(16)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.ToTable("ContactSubmissions");
                 });

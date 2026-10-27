@@ -6,6 +6,7 @@ using Server.Ai;
 using Server.Analytics;
 using Server.Auth;
 using Server.Blog;
+using Server.Clients;
 using Server.Contacts;
 using Server.Content;
 using Server.Data;
@@ -96,5 +97,6 @@ app.MapAnalyticsEndpoints();
 app.MapContactEndpoints();
 app.MapEmployabilityTestEndpoints();
 app.MapContentEndpoints();
+app.MapClientEndpoints();
 
 app.Run();

@@ -1,30 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthToken, BACKEND_URL } from "@/app/lib/auth";
+import { NextRequest } from "next/server";
+import { proxyAuthenticated } from "@/app/lib/backend-proxy";
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function PUT(request: NextRequest, { params }: Params) {
   const { id } = await params;
-  const token = await getAuthToken();
+  const body = await request.json().catch(() => null);
 
-  if (!token) {
-    return NextResponse.json({ message: "No autenticado." }, { status: 401 });
-  }
+  return proxyAuthenticated(
+    `/api/clients/${encodeURIComponent(id)}`,
+    { method: "PUT", body },
+    "No se pudo actualizar el cliente.",
+  );
+}
 
-  let backendResponse: Response;
-  try {
-    backendResponse = await fetch(`${BACKEND_URL}/api/contact/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  } catch {
-    return NextResponse.json(
-      { message: "No pudimos conectar con el servidor. Intenta nuevamente." },
-      { status: 502 },
-    );
-  }
+export async function DELETE(_request: NextRequest, { params }: Params) {
+  const { id } = await params;
 
-  if (!backendResponse.ok) {
-    return NextResponse.json({ message: "No se pudo eliminar el contacto." }, { status: backendResponse.status });
-  }
-
-  return new NextResponse(null, { status: 204 });
+  return proxyAuthenticated(
+    `/api/clients/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+    "No se pudo eliminar el cliente.",
+  );
 }
