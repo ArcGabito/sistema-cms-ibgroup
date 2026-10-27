@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   description: "Ingresa a tu panel de IBOutplacement con tu usuario y contraseña.",
 };
 
+// This is a demo system: when DEMO_USERNAME / DEMO_PASSWORD are set (in Vercel),
+// the login form shows them as placeholders so visitors know how to get in.
+// The page is prerendered, so changing them takes a redeploy.
+const DEMO_USERNAME = process.env.DEMO_USERNAME?.trim() || undefined;
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD?.trim() || undefined;
+
 export default function IngresarPage() {
   return (
     <div className="grid flex-1 grid-cols-1 lg:grid-cols-2">
@@ -50,7 +56,7 @@ export default function IngresarPage() {
         </Link>
 
         <div className="flex flex-1 items-center justify-center">
-          <LoginForm />
+          <LoginForm demoUsername={DEMO_USERNAME} demoPassword={DEMO_PASSWORD} />
         </div>
       </div>
     </div>

@@ -10,7 +10,13 @@ import { Eye, EyeOff, Lock, LogIn, User } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { loginSchema, type LoginFormValues } from "@/app/lib/validations/auth";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  // Demo credentials shown as placeholders so visitors know how to sign in.
+  demoUsername?: string;
+  demoPassword?: string;
+}
+
+export default function LoginForm({ demoUsername, demoPassword }: LoginFormProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const {
@@ -73,7 +79,7 @@ export default function LoginForm() {
             <input
               type="text"
               autoComplete="username"
-              placeholder="tu.usuario"
+              placeholder={demoUsername ?? "tu.usuario"}
               className="w-full rounded-md border border-black/10 bg-white py-3 pr-4 pl-11 text-sm text-ink outline-none transition-colors focus:border-brand"
               {...register("usuario")}
             />
@@ -90,7 +96,7 @@ export default function LoginForm() {
             <input
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
-              placeholder="••••••••"
+              placeholder={demoPassword ?? "••••••••"}
               className="w-full rounded-md border border-black/10 bg-white py-3 pr-11 pl-11 text-sm text-ink outline-none transition-colors focus:border-brand"
               {...register("contrasena")}
             />
