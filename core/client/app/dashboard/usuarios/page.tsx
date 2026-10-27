@@ -21,7 +21,7 @@ export default async function DashboardUsersPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="Usuarios" description="Crea y administra los usuarios con acceso al panel." />
-      <UsersModule initialUsers={users} />
+      <UsersModule initialUsers={users} currentUserId={user.id} />
     </div>
   );
 }

@@ -1,11 +1,7 @@
-import { getAuthToken, BACKEND_URL } from "@/app/lib/auth";
+import { getAuthToken, BACKEND_URL, type CurrentUser } from "@/app/lib/auth";
 
-export interface AdminUser {
-  id: number;
-  username: string;
-  fullName: string;
-  role: string;
-}
+// Same shape the backend returns for the signed-in user.
+export type AdminUser = CurrentUser;
 
 export async function getUsers(): Promise<AdminUser[]> {
   const token = await getAuthToken();

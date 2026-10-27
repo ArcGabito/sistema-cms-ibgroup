@@ -10,6 +10,29 @@ export interface CurrentUser {
   username: string;
   fullName: string;
   role: string;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  lockoutEnd: string | null;
+}
+
+export interface AuthTokenResponse {
+  token: string;
+  expiresAt: string;
+  user: CurrentUser;
+}
+
+// Used by login and by password changes (which rotate the token).
+export async function setAuthCookie({ token, expiresAt }: AuthTokenResponse) {
+  const cookieStore = await cookies();
+  cookieStore.set(AUTH_COOKIE, token, {
+    httpOnly: true,
+    // Only mark the cookie secure once this app is actually served over HTTPS
+    // (e.g. behind a TLS-terminating reverse proxy) — set COOKIE_SECURE=true then.
+    secure: process.env.COOKIE_SECURE === "true",
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(expiresAt),
+  });
 }
 
 export async function getAuthToken(): Promise<string | null> {

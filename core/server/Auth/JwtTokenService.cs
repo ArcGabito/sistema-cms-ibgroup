@@ -9,6 +9,8 @@ namespace Server.Auth;
 
 public class JwtTokenService(IOptions<JwtOptions> options)
 {
+    public const string SecurityStampClaim = "stamp";
+
     private readonly JwtOptions _options = options.Value;
 
     public (string Token, DateTime ExpiresAt) CreateToken(User user)
@@ -21,6 +23,7 @@ public class JwtTokenService(IOptions<JwtOptions> options)
             new Claim("name", user.Username),
             new Claim("role", user.Role),
             new Claim("full_name", user.FullName),
+            new Claim(SecurityStampClaim, user.SecurityStamp),
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));

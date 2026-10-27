@@ -37,7 +37,7 @@ public static class RateLimiting
     // Every request reaches this API through the Next.js server, which forwards
     // the visitor's address in X-Forwarded-For. The header can be spoofed by
     // anyone who reaches the API directly, which is why login also has a
-    // per-account lockout (LoginAttemptTracker) that doesn't depend on it.
+    // per-account lockout (User.LockoutEnd) that doesn't depend on it.
     private static string GetClientIp(HttpContext context)
     {
         var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();

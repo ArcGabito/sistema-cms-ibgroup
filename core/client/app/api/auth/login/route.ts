@@ -1,19 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { loginSchema } from "@/app/lib/validations/auth";
-import { AUTH_COOKIE, BACKEND_URL } from "@/app/lib/auth";
+import { BACKEND_URL, setAuthCookie, type AuthTokenResponse } from "@/app/lib/auth";
 import { forwardedForHeader } from "@/app/lib/forwarded";
-
-interface BackendLoginResponse {
-  token: string;
-  expiresAt: string;
-  user: {
-    id: number;
-    username: string;
-    fullName: string;
-    role: string;
-  };
-}
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -54,18 +42,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const data = (await backendResponse.json()) as BackendLoginResponse;
-
-  const cookieStore = await cookies();
-  cookieStore.set(AUTH_COOKIE, data.token, {
-    httpOnly: true,
-    // Only mark the cookie secure once this app is actually served over HTTPS
-    // (e.g. behind a TLS-terminating reverse proxy) — set COOKIE_SECURE=true then.
-    secure: process.env.COOKIE_SECURE === "true",
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(data.expiresAt),
-  });
+  const data = (await backendResponse.json()) as AuthTokenResponse;
+  await setAuthCookie(data);
 
   return NextResponse.json({ user: data.user });
 }

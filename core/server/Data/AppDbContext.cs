@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
             entity.Property(u => u.PasswordHash).IsRequired();
             entity.Property(u => u.FullName).HasMaxLength(128).IsRequired();
             entity.Property(u => u.Role).HasMaxLength(32).IsRequired();
+            entity.Property(u => u.SecurityStamp).HasMaxLength(64).IsRequired();
             entity.HasIndex(u => u.Username).IsUnique();
         });
 

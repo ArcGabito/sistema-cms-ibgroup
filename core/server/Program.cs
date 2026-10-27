@@ -55,14 +55,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = "name",
             RoleClaimType = "role",
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = TokenValidation.ValidateAgainstUserAsync,
+        };
     });
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(Policies.AdminOnly, policy => policy.RequireRole(Roles.Admin))
     .AddPolicy(Policies.ContentEditor, policy => policy.RequireRole(Roles.All));
 
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<LoginAttemptTracker>();
 builder.Services.AddAppRateLimiting();
 
 var app = builder.Build();

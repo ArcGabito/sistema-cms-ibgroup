@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Server.Auth;
 using Server.Blog;
@@ -52,8 +51,8 @@ public static class DbSeeder
             Role = Roles.Admin,
         };
 
-        var hasher = new PasswordHasher<User>();
-        admin.PasswordHash = hasher.HashPassword(admin, password);
+        // The seed password lives in .env, so the admin has to replace it on first login.
+        Passwords.Set(admin, password, mustChange: true);
 
         db.Users.Add(admin);
         await db.SaveChangesAsync();

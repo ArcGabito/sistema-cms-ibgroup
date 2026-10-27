@@ -3,7 +3,18 @@
 import { useState, type ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Newspaper, BarChart3, Bot, Contact2, Users, ClipboardList, Menu, X } from "lucide-react";
+import {
+  Home,
+  Newspaper,
+  BarChart3,
+  Bot,
+  Contact2,
+  Users,
+  UserCog,
+  ClipboardList,
+  Menu,
+  X,
+} from "lucide-react";
 import type { CurrentUser } from "@/app/lib/auth";
 import LogoutButton from "@/app/components/dashboard/LogoutButton";
 
@@ -34,6 +45,10 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Administración",
     items: [{ label: "Usuarios", href: "/dashboard/usuarios", icon: Users, adminOnly: true }],
+  },
+  {
+    label: "Cuenta",
+    items: [{ label: "Mi cuenta", href: "/dashboard/cuenta", icon: UserCog }],
   },
 ];
 
