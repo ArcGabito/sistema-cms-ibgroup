@@ -1,0 +1,101 @@
+name: Deploy server
+
+# Builds core/server into a container image, publishes it to GitHub
+# Container Registry and rolls it out to the Azure Container App.
+on:
+  push:
+    branches: [master]
+    paths:
+      - "core/server/**"
+      - "docker/Dockerfile.server"
+      - ".github/workflows/deploy-server.yml"
+  workflow_dispatch:
+
+env:
+  # GHCR image names must be lowercase.
+  IMAGE: ghcr.io/arcgabito/ibgroup-cms-server
+  RESOURCE_GROUP: rg-ibgroup
+  CONTAINER_APP: ca-ibgroup-server
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ env.IMAGE }}:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.server
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          # Links the package to this repository on GitHub.
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Azure Container Apps
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      # OIDC: Azure trusts GitHub's short-lived token, so no Azure secret is stored here.
+      id-token: write
+      contents: read
+    steps:
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Roll out the new image
+        run: |
+          az containerapp update \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$CONTAINER_APP" \
+            --image "${{ needs.build.outputs.image }}" \
+            --output none
+
+          # The app listens on 8080 (docker/Dockerfile.server).
+          az containerapp ingress update \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$CONTAINER_APP" \
+            --target-port 8080 \
+            --output none
+
+      - name: Smoke test
+        run: |
+          url="https://$(az containerapp show -g "$RESOURCE_GROUP" -n "$CONTAINER_APP" --query properties.configuration.ingress.fqdn -o tsv)"
+          # The app scales to zero and the free database may be paused, so the
+          # first request can take a minute while both wake up.
+          for attempt in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "$url/api/posts" || true)
+            echo "attempt $attempt: $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "The API didn't answer 200 at $url/api/posts" >&2
+          exit 1
