@@ -7,64 +7,57 @@ import SectionLabel from "@/app/components/ui/SectionLabel";
 import Reveal from "@/app/components/ui/Reveal";
 import BarChart from "@/app/components/charts/BarChart";
 import GroupedBarChart from "@/app/components/charts/GroupedBarChart";
-import {
-  MEJORO_PUESTO,
-  MEJORO_SUELDO,
-  RECOLOCACION_MESES,
-  RECOLOCADOS_RED_CONTACTOS,
-  TRABAJAN_NO_TRABAJAN,
-} from "@/app/lib/stats-data";
+import type { StatChart } from "@/app/lib/content";
 
 const formatMonths = (v: number) => v.toLocaleString("es-PE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const formatPercent = (v: number) => `${v}%`;
 
-const SLIDES = [
-  {
-    title: "Meses promedio de recolocación",
-    description: "Tiempo promedio, en meses, que toma a nuestros candidatos conseguir una nueva posición.",
-    render: () => (
-      <BarChart data={RECOLOCACION_MESES} yMax={12} yStep={2} formatValue={formatMonths} />
-    ),
-  },
-  {
-    title: "Recolocados por red de contactos",
-    description: "Porcentaje de candidatos que logró su nueva posición activando su red de contactos.",
-    render: () => (
-      <BarChart data={RECOLOCADOS_RED_CONTACTOS} yMax={100} yStep={20} formatValue={formatPercent} formatTick={(v) => `${v}%`} />
-    ),
-  },
-  {
-    title: "Mejoró o igualó sueldo anterior",
-    description: "Porcentaje de candidatos que se recolocó con una compensación igual o superior a la anterior.",
-    render: () => (
-      <BarChart data={MEJORO_SUELDO} yMax={100} yStep={20} formatValue={formatPercent} formatTick={(v) => `${v}%`} />
-    ),
-  },
-  {
-    title: "Mejoró o igualó puesto anterior",
-    description: "Porcentaje de candidatos que se recolocó en un nivel de puesto igual o superior al anterior.",
-    render: () => (
-      <BarChart data={MEJORO_PUESTO} yMax={100} yStep={20} formatValue={formatPercent} formatTick={(v) => `${v}%`} />
-    ),
-  },
-  {
-    title: "Clientes que contratan nuestro servicio: trabajan o no trabajan",
-    description: "Distribución de candidatos que iniciaron su proceso de outplacement estando o no empleados.",
-    render: () => (
-      <GroupedBarChart data={TRABAJAN_NO_TRABAJAN} yMax={100} yStep={20} formatValue={formatPercent} />
-    ),
-  },
-];
+function renderChart(chart: StatChart) {
+  if (chart.kind === "split") {
+    return (
+      <GroupedBarChart
+        data={chart.points.map((p) => ({ year: p.year, first: p.value, second: p.secondValue ?? 0 }))}
+        labels={[chart.seriesLabel ?? "", chart.secondSeriesLabel ?? ""]}
+        yMax={100}
+        yStep={20}
+        formatValue={formatPercent}
+      />
+    );
+  }
 
-export default function StatsCarousel() {
+  if (chart.kind === "months") {
+    // Keeps the original 0-12 scale unless a value outgrows it.
+    const top = Math.max(12, Math.ceil(Math.max(...chart.points.map((p) => p.value)) / 2) * 2);
+    return <BarChart data={chart.points} yMax={top} yStep={2} formatValue={formatMonths} />;
+  }
+
+  return (
+    <BarChart data={chart.points} yMax={100} yStep={20} formatValue={formatPercent} formatTick={(v) => `${v}%`} />
+  );
+}
+
+// "2018 - 2025" from the years present in the charts, when they're numeric.
+function yearRange(charts: StatChart[]) {
+  const years = charts.flatMap((c) => c.points.map((p) => Number(p.year))).filter(Number.isFinite);
+  if (years.length === 0) return "";
+  const min = Math.min(...years);
+  const max = Math.max(...years);
+  return min === max ? ` ${min}` : ` ${min} - ${max}`;
+}
+
+export default function StatsCarousel({ charts }: { charts: StatChart[] }) {
   const [index, setIndex] = useState(0);
 
+  if (charts.length === 0) {
+    return null;
+  }
+
   const goTo = (target: number) => {
-    const clamped = (target + SLIDES.length) % SLIDES.length;
+    const clamped = (target + charts.length) % charts.length;
     setIndex(clamped);
   };
 
-  const slide = SLIDES[index];
+  const slide = charts[Math.min(index, charts.length - 1)];
 
   return (
     <section className="py-20 sm:py-28">
@@ -72,7 +65,7 @@ export default function StatsCarousel() {
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel align="center">Estadísticas</SectionLabel>
           <h2 className="mt-4 font-heading text-3xl font-bold text-ink sm:text-4xl">
-            Estadísticas 2018 - 2025
+            Estadísticas{yearRange(charts)}
           </h2>
         </div>
 
@@ -102,7 +95,7 @@ export default function StatsCarousel() {
               <p className="mx-auto mt-2 max-w-lg text-center text-xs leading-relaxed text-ink/50">
                 {slide.description}
               </p>
-              <div className="mt-6">{slide.render()}</div>
+              <div className="mt-6">{renderChart(slide)}</div>
             </div>
           </div>
 
@@ -126,9 +119,9 @@ export default function StatsCarousel() {
           </div>
 
           <div className="mt-6 flex justify-center gap-2">
-            {SLIDES.map((s, i) => (
+            {charts.map((s, i) => (
               <button
-                key={s.title}
+                key={s.id}
                 type="button"
                 aria-label={`Ir a ${s.title}`}
                 onClick={() => goTo(i)}

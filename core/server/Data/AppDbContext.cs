@@ -14,6 +14,10 @@ public class AppDbContext : DbContext
     public DbSet<ContactSubmission> ContactSubmissions => Set<ContactSubmission>();
     public DbSet<EmployabilityTestSubmission> EmployabilityTestSubmissions => Set<EmployabilityTestSubmission>();
     public DbSet<Client> Clients => Set<Client>();
+    public DbSet<ServiceItem> Services => Set<ServiceItem>();
+    public DbSet<FaqItem> Faqs => Set<FaqItem>();
+    public DbSet<CountryItem> Countries => Set<CountryItem>();
+    public DbSet<StatChart> StatCharts => Set<StatChart>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,6 +84,38 @@ public class AppDbContext : DbContext
             entity.Property(e => e.RespuestasJson).IsRequired();
             entity.Property(e => e.AutorizaDatos).HasMaxLength(16);
             entity.Property(e => e.DeseaOrientacion).HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<ServiceItem>(entity =>
+        {
+            entity.Property(s => s.Title).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.Description).HasMaxLength(1000).IsRequired();
+            entity.Property(s => s.CtaLabel).HasMaxLength(60).IsRequired();
+            entity.Property(s => s.ImageUrl).HasMaxLength(500).IsRequired();
+            entity.Property(s => s.Icon).HasMaxLength(32).IsRequired();
+        });
+
+        modelBuilder.Entity<FaqItem>(entity =>
+        {
+            entity.Property(f => f.Question).HasMaxLength(300).IsRequired();
+            entity.Property(f => f.Answer).HasMaxLength(2000).IsRequired();
+        });
+
+        modelBuilder.Entity<CountryItem>(entity =>
+        {
+            entity.Property(c => c.Name).HasMaxLength(80).IsRequired();
+            entity.Property(c => c.Code).HasMaxLength(2).IsRequired();
+            entity.Property(c => c.Description).HasMaxLength(500).IsRequired();
+        });
+
+        modelBuilder.Entity<StatChart>(entity =>
+        {
+            entity.Property(s => s.Title).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.Description).HasMaxLength(500).IsRequired();
+            entity.Property(s => s.Kind).HasMaxLength(16).IsRequired();
+            entity.Property(s => s.SeriesLabel).HasMaxLength(60);
+            entity.Property(s => s.SecondSeriesLabel).HasMaxLength(60);
+            entity.OwnsMany(s => s.Points, points => points.ToJson());
         });
 
         modelBuilder.Entity<Client>(entity =>

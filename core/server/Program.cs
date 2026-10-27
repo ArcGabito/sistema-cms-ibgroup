@@ -7,6 +7,7 @@ using Server.Analytics;
 using Server.Auth;
 using Server.Blog;
 using Server.Contacts;
+using Server.Content;
 using Server.Data;
 using Server.EmployabilityTest;
 
@@ -94,5 +95,6 @@ app.MapPostsEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapContactEndpoints();
 app.MapEmployabilityTestEndpoints();
+app.MapContentEndpoints();
 
 app.Run();

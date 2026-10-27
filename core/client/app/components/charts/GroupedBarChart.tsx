@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { YearGroupValue } from "@/app/lib/stats-data";
+export interface GroupedValue {
+  year: string;
+  first: number;
+  second: number;
+}
 
 interface GroupedBarChartProps {
-  data: YearGroupValue[];
+  data: GroupedValue[];
+  labels: [string, string];
   yMax: number;
   yStep: number;
   formatValue: (value: number) => string;
@@ -18,12 +23,13 @@ const PLOT_H = VIEW_H - MARGIN.top - MARGIN.bottom;
 const GAP = 2;
 const INSIDE_LABEL_MIN_HEIGHT = 28;
 
-const SERIES = [
-  { key: "trabajan" as const, label: "Trabajan", color: "#2a78d6", colorHover: "#1c5cab" },
-  { key: "noTrabajan" as const, label: "No trabajan", color: "#d21f2e", colorHover: "#a3141f" },
+const SERIES_STYLES = [
+  { key: "first" as const, color: "#2a78d6", colorHover: "#1c5cab" },
+  { key: "second" as const, color: "#d21f2e", colorHover: "#a3141f" },
 ];
 
-export default function GroupedBarChart({ data, yMax, yStep, formatValue }: GroupedBarChartProps) {
+export default function GroupedBarChart({ data, labels, yMax, yStep, formatValue }: GroupedBarChartProps) {
+  const series = SERIES_STYLES.map((s, i) => ({ ...s, label: labels[i] }));
   const [hovered, setHovered] = useState<number | null>(null);
 
   const ticks = [];
@@ -39,12 +45,12 @@ export default function GroupedBarChart({ data, yMax, yStep, formatValue }: Grou
   const hoveredRow = hovered !== null ? data[hovered] : null;
   const hoveredX = hovered !== null ? MARGIN.left + hovered * slotWidth + slotWidth / 2 : 0;
   const hoveredTopY =
-    hoveredRow ? valueToY(Math.max(hoveredRow.trabajan, hoveredRow.noTrabajan)) : 0;
+    hoveredRow ? valueToY(Math.max(hoveredRow.first, hoveredRow.second)) : 0;
 
   return (
     <div className="relative w-full">
       <div className="mb-4 flex items-center justify-center gap-6">
-        {SERIES.map((s) => (
+        {series.map((s) => (
           <div key={s.key} className="flex items-center gap-2 text-xs font-medium text-ink/70">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
             {s.label}
@@ -76,14 +82,14 @@ export default function GroupedBarChart({ data, yMax, yStep, formatValue }: Grou
               key={d.year}
               tabIndex={0}
               role="img"
-              aria-label={`${d.year}: trabajan ${formatValue(d.trabajan)}, no trabajan ${formatValue(d.noTrabajan)}`}
+              aria-label={`${d.year}: ${labels[0]} ${formatValue(d.first)}, ${labels[1]} ${formatValue(d.second)}`}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
               onFocus={() => setHovered(i)}
               onBlur={() => setHovered(null)}
               className="cursor-pointer outline-none"
             >
-              {SERIES.map((s, si) => {
+              {series.map((s, si) => {
                 const value = d[s.key];
                 const barHeight = (value / yMax) * PLOT_H;
                 const barTop = baselineY - barHeight;
@@ -125,8 +131,8 @@ export default function GroupedBarChart({ data, yMax, yStep, formatValue }: Grou
           }}
         >
           <p className="font-semibold">{hoveredRow.year}</p>
-          <p>Trabajan: {formatValue(hoveredRow.trabajan)}</p>
-          <p>No trabajan: {formatValue(hoveredRow.noTrabajan)}</p>
+          <p>{labels[0]}: {formatValue(hoveredRow.first)}</p>
+          <p>{labels[1]}: {formatValue(hoveredRow.second)}</p>
         </div>
       )}
     </div>

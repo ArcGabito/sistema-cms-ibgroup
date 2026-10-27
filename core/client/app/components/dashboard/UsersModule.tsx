@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
-import { KeyRound, Pencil, Trash2, UserPlus, Users, X } from "lucide-react";
+import { KeyRound, Pencil, Trash2, UserPlus, Users } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { TextField, SelectField } from "@/app/components/forms/FormFields";
 import {
@@ -21,6 +21,7 @@ import Badge from "@/app/components/dashboard/ui/Badge";
 import SearchInput from "@/app/components/dashboard/ui/SearchInput";
 import EmptyState from "@/app/components/dashboard/ui/EmptyState";
 import { useConfirmDialog } from "@/app/components/dashboard/ui/ConfirmDialog";
+import Modal from "@/app/components/dashboard/ui/Modal";
 
 interface UsersModuleProps {
   initialUsers: AdminUser[];
@@ -274,22 +275,6 @@ function IconButton({ label, onClick, children }: { label: string; onClick: () =
     >
       {children}
     </button>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between">
-          <h2 className="font-heading text-lg font-bold text-ink">{title}</h2>
-          <button type="button" aria-label="Cerrar" onClick={onClose} className="text-ink/50 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="mt-5">{children}</div>
-      </div>
-    </div>
   );
 }
 

@@ -6,6 +6,7 @@ import {
   Inbox,
   Users,
   Newspaper,
+  LayoutGrid,
   Contact2,
   BarChart3,
   Bot,
@@ -29,6 +30,12 @@ const MODULES = [
     href: "/dashboard/blog",
     icon: Newspaper,
     description: "Crea, edita y publica los artículos del blog.",
+  },
+  {
+    label: "Contenido",
+    href: "/dashboard/contenido",
+    icon: LayoutGrid,
+    description: "Servicios, preguntas frecuentes, estadísticas y países del sitio.",
   },
   {
     label: "Clientes",

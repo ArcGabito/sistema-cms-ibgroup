@@ -4,19 +4,19 @@ import { useState } from "react";
 import { Pin, Plus } from "lucide-react";
 import Container from "@/app/components/ui/Container";
 import Reveal from "@/app/components/ui/Reveal";
-import { FAQ_ITEMS } from "@/app/lib/faq-data";
+import type { FaqItem } from "@/app/lib/content";
 
-export default function FaqAccordion() {
+export default function FaqAccordion({ items }: { items: FaqItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
     <section className="py-20 sm:py-28">
       <Container className="max-w-4xl">
         <div className="flex flex-col gap-4">
-          {FAQ_ITEMS.map((item, index) => {
+          {items.map((item, index) => {
             const isOpen = openIndex === index;
             return (
-              <Reveal key={item.question} delay={Math.min(index * 0.04, 0.4)}>
+              <Reveal key={item.id} delay={Math.min(index * 0.04, 0.4)}>
                 <div
                   className={`overflow-hidden rounded-xl border transition-colors ${
                     isOpen ? "border-brand/30 bg-white shadow-sm" : "border-black/5 bg-white"

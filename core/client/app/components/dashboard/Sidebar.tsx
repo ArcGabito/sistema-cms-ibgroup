@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   Newspaper,
+  LayoutGrid,
   BarChart3,
   Bot,
   Contact2,
@@ -36,6 +37,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Inicio", href: "/dashboard", icon: Home },
       { label: "Blog", href: "/dashboard/blog", icon: Newspaper },
+      { label: "Contenido", href: "/dashboard/contenido", icon: LayoutGrid },
       { label: "Clientes", href: "/dashboard/clientes", icon: Contact2, adminOnly: true },
       { label: "Test", href: "/dashboard/test", icon: ClipboardList, adminOnly: true },
       { label: "Analíticas", href: "/dashboard/analiticas", icon: BarChart3 },

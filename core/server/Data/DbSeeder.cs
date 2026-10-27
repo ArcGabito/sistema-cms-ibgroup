@@ -12,6 +12,27 @@ public static class DbSeeder
         var author = await SeedAdminAsync(db, config);
         await SeedBlogPostsAsync(db, author);
         await SeedClientsAsync(db);
+        await SeedContentAsync(db, db.Services, ContentSeedData.Services());
+        await SeedContentAsync(db, db.Faqs, ContentSeedData.Faqs());
+        await SeedContentAsync(db, db.Countries, ContentSeedData.Countries());
+        await SeedContentAsync(db, db.StatCharts, ContentSeedData.Stats());
+    }
+
+    private static async Task SeedContentAsync<T>(AppDbContext db, DbSet<T> set, List<T> items)
+        where T : class, IContentItem
+    {
+        if (await set.AnyAsync())
+        {
+            return;
+        }
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            items[i].SortOrder = i;
+        }
+
+        set.AddRange(items);
+        await db.SaveChangesAsync();
     }
 
     private static async Task SeedClientsAsync(AppDbContext db)

@@ -3,9 +3,9 @@ import Link from "next/link";
 import Container from "@/app/components/ui/Container";
 import SectionLabel from "@/app/components/ui/SectionLabel";
 import Reveal from "@/app/components/ui/Reveal";
-import { COUNTRIES } from "@/app/lib/countries-data";
+import type { CountryItem } from "@/app/lib/content";
 
-export default function Countries() {
+export default function Countries({ countries }: { countries: CountryItem[] }) {
   return (
     <section id="paises" className="py-20 sm:py-24">
       <Container>
@@ -17,8 +17,8 @@ export default function Countries() {
         </div>
 
         <div className="mt-12 flex flex-wrap items-center justify-center gap-12">
-          {COUNTRIES.map(({ name, code }, i) => (
-            <Reveal key={code} delay={i * 0.1} className="flex flex-col items-center gap-3">
+          {countries.map(({ id, name, code }, i) => (
+            <Reveal key={id} delay={i * 0.1} className="flex flex-col items-center gap-3">
               <span className="relative h-20 w-20 overflow-hidden rounded-full border border-black/10 shadow-sm">
                 <Image
                   src={`https://flagcdn.com/w160/${code}.png`}

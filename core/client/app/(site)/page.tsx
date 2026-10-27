@@ -7,9 +7,10 @@ import Services from "@/app/components/sections/Services";
 import IBJobCoach from "@/app/components/sections/IBJobCoach";
 import Countries from "@/app/components/sections/Countries";
 import { getPublishedPosts } from "@/app/lib/posts";
+import { getPublicContent } from "@/app/lib/content";
 
 export default async function Home() {
-  const posts = await getPublishedPosts();
+  const [posts, countries] = await Promise.all([getPublishedPosts(), getPublicContent("countries")]);
 
   return (
     <>
@@ -20,7 +21,7 @@ export default async function Home() {
       <Blog posts={posts} />
       <Services />
       <IBJobCoach />
-      <Countries />
+      <Countries countries={countries} />
     </>
   );
 }

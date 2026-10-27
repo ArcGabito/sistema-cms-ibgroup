@@ -3,18 +3,20 @@ import { CheckCircle2 } from "lucide-react";
 import Container from "@/app/components/ui/Container";
 import Button from "@/app/components/ui/Button";
 import Reveal from "@/app/components/ui/Reveal";
-import { SERVICES } from "@/app/lib/services-data";
+import type { ServiceItem } from "@/app/lib/content";
+import { serviceIcon } from "@/app/lib/service-icons";
 
-export default function ServicesDetail() {
+export default function ServicesDetail({ services }: { services: ServiceItem[] }) {
   return (
     <section className="py-20 sm:py-28">
       <Container>
         <div className="flex flex-col gap-20 sm:gap-28">
-          {SERVICES.map(({ icon: Icon, title, description, features, cta, image }, i) => {
+          {services.map(({ id, icon, title, description, features, ctaLabel, imageUrl }, i) => {
+            const Icon = serviceIcon(icon);
             const reversed = i % 2 === 1;
             return (
               <div
-                key={title}
+                key={id}
                 className={`grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16 ${
                   reversed ? "lg:[&>*:first-child]:order-2" : ""
                 }`}
@@ -22,7 +24,7 @@ export default function ServicesDetail() {
                 <Reveal className="relative">
                   <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl">
                     <Image
-                      src={image}
+                      src={imageUrl}
                       alt={title}
                       fill
                       sizes="(min-width: 1024px) 45vw, 100vw"
@@ -51,7 +53,7 @@ export default function ServicesDetail() {
                   </ul>
                   <div className="mt-8">
                     <Button href="/contactenos" variant="solid">
-                      {cta}
+                      {ctaLabel}
                     </Button>
                   </div>
                 </Reveal>
