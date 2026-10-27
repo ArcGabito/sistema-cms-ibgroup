@@ -26,7 +26,7 @@ public record ServiceRequest(
         if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(Description))
             return "El título y la descripción son obligatorios.";
         if (string.IsNullOrWhiteSpace(ImageUrl) || !ContentValidation.IsImageUrl(ImageUrl))
-            return "La imagen debe ser una ruta /assets/... o una URL https.";
+            return "La imagen debe ser una ruta /assets/..., una imagen subida o una URL https.";
         if (!ContentIcons.Service.Contains(Icon))
             return "Ícono inválido.";
         if (CleanFeatures().Count > 10)
@@ -146,8 +146,9 @@ public record StatChartRequest(
 
 public static class ContentValidation
 {
-    // Images come from the site's own /assets folder or an absolute https URL.
+    // Images come from the site's own /assets folder, an uploaded file, or an absolute https URL.
     public static bool IsImageUrl(string value) =>
         value.StartsWith("/assets/", StringComparison.Ordinal) ||
+        value.StartsWith("/uploads/", StringComparison.Ordinal) ||
         (Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps);
 }

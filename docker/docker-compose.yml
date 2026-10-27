@@ -49,6 +49,9 @@ services:
       Seed__AdminFullName: ${SEED_ADMIN_FULLNAME:-Administrador}
       Ai__ApiKey: ${ANTHROPIC_API_KEY:-}
       Ai__Model: ${AI_MODEL:-claude-haiku-5-5}
+      Uploads__Path: /app/uploads
+    volumes:
+      - uploads:/app/uploads
     ports:
       - "8080:8080"
     depends_on:
@@ -70,3 +73,4 @@ services:
 
 volumes:
   db-data:
+  uploads:

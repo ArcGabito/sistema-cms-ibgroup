@@ -1,12 +1,13 @@
 "use client";
 
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { TextField, TextareaField } from "@/app/components/forms/FormFields";
 import type { CountryItem, FaqItem, ServiceItem, StatChart } from "@/app/lib/content";
 import { SERVICE_ICONS } from "@/app/lib/service-icons";
+import ImageUploadField from "@/app/components/dashboard/ui/ImageUploadField";
 import {
   countrySchema,
   faqSchema,
@@ -116,10 +117,18 @@ export function ServiceForm({ initial, onSubmit }: ContentFormProps<ServiceItem>
           </select>
         </div>
       </div>
-      <TextField
-        label="Imagen (/assets/... o URL https)"
-        error={errors.imageUrl}
-        {...register("imageUrl")}
+      <Controller
+        control={control}
+        name="imageUrl"
+        render={({ field }) => (
+          <ImageUploadField
+            label="Imagen"
+            value={field.value}
+            onChange={field.onChange}
+            error={errors.imageUrl?.message}
+            placeholder="/assets/... o https://..."
+          />
+        )}
       />
       <VisibleField {...register("isVisible")} />
       <SubmitButton isSubmitting={isSubmitting} />

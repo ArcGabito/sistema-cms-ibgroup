@@ -11,6 +11,7 @@ using Server.Contacts;
 using Server.Content;
 using Server.Data;
 using Server.EmployabilityTest;
+using Server.Uploads;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,5 +99,8 @@ app.MapContactEndpoints();
 app.MapEmployabilityTestEndpoints();
 app.MapContentEndpoints();
 app.MapClientEndpoints();
+
+var uploadOptions = app.Configuration.GetSection(UploadOptions.SectionName).Get<UploadOptions>() ?? new UploadOptions();
+app.MapUploadEndpoints(Path.Combine(app.Environment.ContentRootPath, uploadOptions.Path));
 
 app.Run();

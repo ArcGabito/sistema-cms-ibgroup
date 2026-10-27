@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
 import { Newspaper, Pencil, Trash2, X } from "lucide-react";
@@ -13,6 +13,8 @@ import Badge from "@/app/components/dashboard/ui/Badge";
 import SearchInput from "@/app/components/dashboard/ui/SearchInput";
 import EmptyState from "@/app/components/dashboard/ui/EmptyState";
 import { useConfirmDialog } from "@/app/components/dashboard/ui/ConfirmDialog";
+import ImageUploadField from "@/app/components/dashboard/ui/ImageUploadField";
+import MarkdownEditor from "@/app/components/dashboard/ui/MarkdownEditor";
 
 interface BlogModuleProps {
   initialPosts: Post[];
@@ -33,6 +35,7 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
   const { confirm, dialog } = useConfirmDialog();
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
@@ -156,12 +159,29 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
           <TextField label="Título" error={errors.title} {...register("title")} />
           <TextareaField label="Resumen" error={errors.excerpt} rows={2} {...register("excerpt")} />
-          <TextareaField label="Contenido" error={errors.content} rows={8} {...register("content")} />
-          <TextField
-            label="URL de imagen (opcional)"
-            error={errors.imageUrl}
-            placeholder="https://..."
-            {...register("imageUrl")}
+          <Controller
+            control={control}
+            name="content"
+            render={({ field }) => (
+              <MarkdownEditor
+                label="Contenido"
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.content?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="imageUrl"
+            render={({ field }) => (
+              <ImageUploadField
+                label="Imagen de portada (opcional)"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                error={errors.imageUrl?.message}
+              />
+            )}
           />
           <label className="flex items-center gap-2 text-sm text-ink/70">
             <input

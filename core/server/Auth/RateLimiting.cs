@@ -7,6 +7,7 @@ public static class RateLimiting
 {
     public const string Login = "Login";
     public const string PublicForms = "PublicForms";
+    public const string Uploads = "Uploads";
 
     public static IServiceCollection AddAppRateLimiting(this IServiceCollection services)
     {
@@ -22,6 +23,7 @@ public static class RateLimiting
 
             options.AddPolicy(Login, context => FixedWindowPerClient(context, permitLimit: 10, TimeSpan.FromMinutes(1)));
             options.AddPolicy(PublicForms, context => FixedWindowPerClient(context, permitLimit: 5, TimeSpan.FromMinutes(10)));
+            options.AddPolicy(Uploads, context => FixedWindowPerClient(context, permitLimit: 30, TimeSpan.FromMinutes(10)));
         });
     }
 

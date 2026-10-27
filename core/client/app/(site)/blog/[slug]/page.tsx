@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import PageHero from "@/app/components/sections/PageHero";
 import Container from "@/app/components/ui/Container";
+import Markdown from "@/app/components/ui/Markdown";
 import { getPublishedPostBySlug } from "@/app/lib/posts";
 
 const FALLBACK_IMAGE = "/assets/hero-portada-sections.jpg";
@@ -51,7 +52,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     month: "long",
     year: "numeric",
   });
-  const paragraphs = post.content.split(/\n{2,}/).filter((p) => p.trim());
 
   return (
     <>
@@ -69,12 +69,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {publishedAt} · {post.authorName}
             </p>
 
-            <div className="mt-8 flex flex-col gap-6 text-base leading-relaxed text-ink/80">
-              {paragraphs.map((paragraph, i) => (
-                <p key={i} className="whitespace-pre-line">
-                  {paragraph}
-                </p>
-              ))}
+            {/* Content is Markdown; older posts are plain paragraphs, which Markdown renders the same. */}
+            <div className="mt-8 text-base leading-relaxed text-ink/80">
+              <Markdown>{post.content}</Markdown>
             </div>
 
             <Link

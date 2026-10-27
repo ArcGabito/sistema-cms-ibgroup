@@ -10,7 +10,10 @@ export const serviceSchema = z.object({
   imageUrl: z
     .string()
     .trim()
-    .refine((v) => v.startsWith("/assets/") || v.startsWith("https://"), "Usa /assets/... o una URL https"),
+    .refine(
+      (v) => v.startsWith("/assets/") || v.startsWith("/uploads/") || v.startsWith("https://"),
+      "Sube una imagen, o usa /assets/... o una URL https",
+    ),
   icon: required("Elige un ícono"),
   isVisible: z.boolean(),
 });

@@ -18,8 +18,9 @@ public class AiDraftGenerator(IHttpClientFactory httpClientFactory, IOptions<AiO
         "profesional y cercano, dirigido a ejecutivos y profesionales en transición laboral. Responde " +
         "ÚNICAMENTE con un objeto JSON válido, sin bloques de código ni texto adicional, con esta forma " +
         "exacta: {\"title\": string, \"excerpt\": string, \"content\": string}. \"excerpt\" debe tener como " +
-        "máximo 200 caracteres. \"content\" debe tener varios párrafos en texto plano (usa saltos de línea " +
-        "dobles entre párrafos, sin markdown).";
+        "máximo 200 caracteres y ser texto plano. \"content\" debe estar en Markdown: varios párrafos " +
+        "separados por una línea en blanco, subtítulos ## donde ayuden a ordenar el texto y listas cuando " +
+        "corresponda; sin título principal (#), porque el título ya va aparte.";
 
     public async Task<AiDraft> GenerateDraftAsync(string topic)
     {
