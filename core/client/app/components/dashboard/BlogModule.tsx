@@ -131,15 +131,15 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
+    <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(320px,420px)_1fr]">
       {dialog}
 
       <div
-        className={`rounded-lg border bg-white p-6 transition-colors ${
+        className={`flex flex-col rounded-lg border bg-white transition-colors lg:min-h-0 ${
           editingId ? "border-brand/30" : "border-black/10"
         }`}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-black/5 px-6 py-4">
           <h2 className="flex items-center gap-2 font-heading text-base font-bold text-ink">
             <Newspaper className="h-[18px] w-[18px]" />
             {editingId ? "Editar post" : "Nuevo post"}
@@ -156,7 +156,10 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
           )}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-4 px-6 py-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+        >
           <TextField label="Título" error={errors.title} {...register("title")} />
           <TextareaField label="Resumen" error={errors.excerpt} rows={2} {...register("excerpt")} />
           <Controller
@@ -165,6 +168,7 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
             render={({ field }) => (
               <MarkdownEditor
                 label="Contenido"
+                rows={7}
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.content?.message}
@@ -197,8 +201,8 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
         </form>
       </div>
 
-      <div className="rounded-lg border border-black/10 bg-white p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col rounded-lg border border-black/10 bg-white lg:min-h-0">
+        <div className="flex flex-col gap-4 border-b border-black/5 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="font-heading text-base font-bold text-ink">
             Posts existentes
             <span className="ml-2 text-xs font-normal text-ink/40">
@@ -213,7 +217,7 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
           />
         </div>
 
-        <div className="mt-5 overflow-x-auto">
+        <div className="overflow-x-auto px-6 pb-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           {filteredPosts.length === 0 ? (
             <EmptyState
               icon={Newspaper}
@@ -226,12 +230,13 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
             />
           ) : (
             <table className="w-full text-left text-sm">
-              <thead>
+              {/* Sticky so the column names stay visible while the list scrolls. */}
+              <thead className="sticky top-0 z-10 bg-white">
                 <tr className="border-b border-black/10 text-xs font-semibold tracking-wider text-ink/40 uppercase">
-                  <th className="pb-3">Título</th>
-                  <th className="pb-3">Autor</th>
-                  <th className="pb-3">Estado</th>
-                  <th className="pb-3" />
+                  <th className="pt-4 pb-3">Título</th>
+                  <th className="pt-4 pb-3">Autor</th>
+                  <th className="pt-4 pb-3">Estado</th>
+                  <th className="pt-4 pb-3" />
                 </tr>
               </thead>
               <tbody>
