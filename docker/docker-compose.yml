@@ -48,7 +48,7 @@ services:
       Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env (repo root)}
       Seed__AdminFullName: ${SEED_ADMIN_FULLNAME:-Administrador}
       Ai__ApiKey: ${ANTHROPIC_API_KEY:-}
-      Ai__Model: ${AI_MODEL:-claude-haiku-4-5-20251001}
+      Ai__Model: ${AI_MODEL:-claude-haiku-5-5}
     ports:
       - "8080:8080"
     depends_on:
@@ -62,6 +62,7 @@ services:
     container_name: ibgroup-client
     environment:
       BACKEND_URL: http://server:8080
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
     ports:
       - "3000:3000"
     depends_on:

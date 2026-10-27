@@ -33,10 +33,13 @@ public class AiDraftGenerator(IHttpClientFactory httpClientFactory, IOptions<AiO
         client.DefaultRequestHeaders.Add("x-api-key", _options.ApiKey);
         client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
 
+        // Haiku 5.5 always thinks (adaptively), and thinking counts toward
+        // max_tokens, so leave room for it; low effort is enough for a draft.
         var payload = new
         {
             model = _options.Model,
-            max_tokens = 1500,
+            max_tokens = 16000,
+            output_config = new { effort = "low" },
             system = SystemPrompt,
             messages = new[]
             {
@@ -56,7 +59,24 @@ public class AiDraftGenerator(IHttpClientFactory httpClientFactory, IOptions<AiO
         }
 
         using var doc = JsonDocument.Parse(body);
-        var text = doc.RootElement.GetProperty("content")[0].GetProperty("text").GetString() ?? "";
+
+        var stopReason = doc.RootElement.TryGetProperty("stop_reason", out var sr) ? sr.GetString() : null;
+        if (stopReason == "refusal")
+        {
+            throw new InvalidOperationException("El modelo rechazó generar un borrador sobre ese tema.");
+        }
+
+        if (stopReason == "max_tokens")
+        {
+            throw new InvalidOperationException("La respuesta del modelo quedó incompleta. Intenta con un tema más acotado.");
+        }
+
+        // The response can start with thinking blocks; the draft is in the text block.
+        var text = doc.RootElement.GetProperty("content")
+            .EnumerateArray()
+            .Where(block => block.GetProperty("type").GetString() == "text")
+            .Select(block => block.GetProperty("text").GetString())
+            .FirstOrDefault() ?? "";
 
         var jsonText = ExtractJson(text);
 

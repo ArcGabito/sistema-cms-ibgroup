@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 import { Toaster } from "sileo";
 import "sileo/styles.css";
 import "./globals.css";
+import { SITE_URL } from "@/app/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -16,6 +17,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  // Makes relative Open Graph image URLs (e.g. /assets/...) absolute.
+  metadataBase: new URL(SITE_URL),
   title: "IBOutplacement | Outplacement en Perú",
   description:
     "Programas de outplacement en Perú para ejecutivos y profesionales en transición laboral: coaching de empleabilidad, entrenamiento para entrevistas y acompañamiento personalizado.",
