@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { KeyRound } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { TextField } from "@/app/components/forms/FormFields";
@@ -20,7 +21,7 @@ export default function ChangePasswordForm() {
 
   const onSubmit = async (values: ChangePasswordFormValues) => {
     try {
-      const response = await fetch("/api/auth/change-password", {
+      const response = await fetchConDespertar("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { Newspaper, Pencil, Trash2, X } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { TextField, TextareaField } from "@/app/components/forms/FormFields";
@@ -69,7 +70,7 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
     const isEditing = editingId !== null;
 
     try {
-      const response = await fetch(isEditing ? `/api/posts/${editingId}` : "/api/posts", {
+      const response = await fetchConDespertar(isEditing ? `/api/posts/${editingId}` : "/api/posts", {
         method: isEditing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -110,7 +111,7 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
     if (!ok) return;
 
     try {
-      const response = await fetch(`/api/posts/${post.id}`, { method: "DELETE" });
+      const response = await fetchConDespertar(`/api/posts/${post.id}`, { method: "DELETE" });
 
       if (!response.ok) {
         sileo.error({ title: "No se pudo eliminar el post", description: "Inténtalo nuevamente." });

@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { useRouter } from "next/navigation";
 import Container from "@/app/components/ui/Container";
 import Button from "@/app/components/ui/Button";
@@ -32,7 +33,7 @@ export default function EmployabilityTestForm() {
 
   const onSubmit = async (values: EmployabilityTestFormValues) => {
     try {
-      const response = await fetch("/api/employability-test", {
+      const response = await fetchConDespertar("/api/employability-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

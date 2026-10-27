@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { TextField } from "@/app/components/forms/FormFields";
@@ -43,7 +44,7 @@ export default function ClientsModule({ data, filters }: ClientsModuleProps) {
     if (!ok) return;
 
     try {
-      const response = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
+      const response = await fetchConDespertar(`/api/clients/${client.id}`, { method: "DELETE" });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
         sileo.error({ title: "No se pudo eliminar", description: body?.message ?? "Inténtalo nuevamente." });
@@ -183,7 +184,7 @@ function ClientForm({ initial, onSaved }: { initial?: Client; onSaved: () => voi
 
   const onSubmit = async (values: ClientFormValues) => {
     try {
-      const response = await fetch(initial ? `/api/clients/${initial.id}` : "/api/clients", {
+      const response = await fetchConDespertar(initial ? `/api/clients/${initial.id}` : "/api/clients", {
         method: initial ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

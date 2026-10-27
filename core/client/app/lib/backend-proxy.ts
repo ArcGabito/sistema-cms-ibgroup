@@ -28,7 +28,7 @@ export async function proxyAuthenticated(
   } catch {
     return NextResponse.json(
       { message: "No pudimos conectar con el servidor. Intenta nuevamente." },
-      { status: 502 },
+      { status: 503 },
     );
   }
 

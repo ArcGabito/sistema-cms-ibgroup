@@ -3,6 +3,7 @@
 import { useState, type ComponentType, type ReactNode } from "react";
 import Image from "next/image";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { ArrowDown, ArrowUp, Eye, EyeOff, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import Badge from "@/app/components/dashboard/ui/Badge";
@@ -91,7 +92,7 @@ const CONNECTION_ERROR = {
 };
 
 async function send(url: string, method: string, body?: unknown) {
-  const response = await fetch(url, {
+  const response = await fetchConDespertar(url, {
     method,
     headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,

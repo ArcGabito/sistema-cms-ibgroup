@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { Contact2, Trash2 } from "lucide-react";
 import type { ConsultasPage, ContactSubmission } from "@/app/lib/consultas";
 import Badge from "@/app/components/dashboard/ui/Badge";
@@ -74,7 +75,7 @@ export default function ConsultasModule({ data }: ConsultasModuleProps) {
     if (!ok) return;
 
     try {
-      const response = await fetch(`/api/consultas/${client.id}`, { method: "DELETE" });
+      const response = await fetchConDespertar(`/api/consultas/${client.id}`, { method: "DELETE" });
 
       if (!response.ok) {
         sileo.error({ title: "No se pudo eliminar", description: "Inténtalo nuevamente." });

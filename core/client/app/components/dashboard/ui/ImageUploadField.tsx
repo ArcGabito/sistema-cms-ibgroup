@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { ImagePlus, Loader2, X } from "lucide-react";
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -32,7 +33,7 @@ export default function ImageUploadField({ label, value, onChange, error, placeh
     try {
       const body = new FormData();
       body.set("file", file);
-      const response = await fetch("/api/uploads", { method: "POST", body });
+      const response = await fetchConDespertar("/api/uploads", { method: "POST", body });
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {

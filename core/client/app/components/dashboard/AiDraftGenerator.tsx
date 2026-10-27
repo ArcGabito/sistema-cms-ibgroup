@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { Bot, Sparkles, PenLine, FileEdit, CheckCircle2 } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { TextField } from "@/app/components/forms/FormFields";
@@ -40,7 +41,7 @@ export default function AiDraftGenerator() {
 
   const onSubmit = async (values: GenerateDraftFormValues) => {
     try {
-      const response = await fetch("/api/posts/generate", {
+      const response = await fetchConDespertar("/api/posts/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

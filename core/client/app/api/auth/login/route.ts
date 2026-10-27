@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json(
       { message: "No pudimos conectar con el servidor. Intenta nuevamente." },
-      { status: 502 },
+      { status: 503 },
     );
   }
 
@@ -32,6 +32,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { message: "Demasiados intentos fallidos. Espera unos minutos antes de volver a intentarlo." },
       { status: 429 },
+    );
+  }
+
+  // Azure answers 502/503/504 while the backend wakes up; relay them so the
+  // form can tell "asleep" apart from "wrong password".
+  if (backendResponse.status >= 502 && backendResponse.status <= 504) {
+    return NextResponse.json(
+      { message: "El servidor está iniciando. Intenta nuevamente en un momento." },
+      { status: backendResponse.status },
     );
   }
 

@@ -33,7 +33,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } catch {
     return NextResponse.json(
       { message: "No pudimos conectar con el servidor. Intenta nuevamente." },
-      { status: 502 },
+      { status: 503 },
     );
   }
 
@@ -66,7 +66,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   } catch {
     return NextResponse.json(
       { message: "No pudimos conectar con el servidor. Intenta nuevamente." },
-      { status: 502 },
+      { status: 503 },
     );
   }
 

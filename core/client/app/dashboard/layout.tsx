@@ -1,11 +1,18 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/app/lib/auth";
+import { getSession } from "@/app/lib/auth";
 import Sidebar from "@/app/components/dashboard/Sidebar";
 import ChangePasswordForm from "@/app/components/dashboard/ChangePasswordForm";
 import LogoutButton from "@/app/components/dashboard/LogoutButton";
+import WakingServer from "@/app/components/dashboard/WakingServer";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = await getCurrentUser();
+  const { user, backendUnavailable } = await getSession();
+
+  // The backend sleeps when idle; keep the session and wait instead of
+  // sending the user back to log in.
+  if (!user && backendUnavailable) {
+    return <WakingServer />;
+  }
 
   if (!user) {
     redirect("/ingresar");

@@ -12,6 +12,7 @@ using Server.Contacts;
 using Server.Content;
 using Server.Data;
 using Server.EmployabilityTest;
+using Server.Health;
 using Server.Uploads;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +28,11 @@ builder.Services.AddScoped<AuditLog>();
 
 builder.Services.AddDbContext<AppDbContext>((services, options) =>
     options
-        .UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+        // Azure SQL serverless pauses when idle and rejects connections while it
+        // resumes (error 40613); retrying rides that out, including at startup.
+        .UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sql => sql.EnableRetryOnFailure())
         .AddInterceptors(services.GetRequiredService<AuditInterceptor>()));
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
@@ -108,6 +113,7 @@ app.MapEmployabilityTestEndpoints();
 app.MapContentEndpoints();
 app.MapClientEndpoints();
 app.MapAuditEndpoints();
+app.MapHealthEndpoints();
 
 var uploadOptions = app.Configuration.GetSection(UploadOptions.SectionName).Get<UploadOptions>() ?? new UploadOptions();
 app.MapUploadEndpoints(Path.Combine(app.Environment.ContentRootPath, uploadOptions.Path));

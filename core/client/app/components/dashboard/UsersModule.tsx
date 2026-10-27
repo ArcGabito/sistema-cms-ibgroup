@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { KeyRound, Pencil, Trash2, UserPlus, Users } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { TextField, SelectField } from "@/app/components/forms/FormFields";
@@ -71,7 +72,7 @@ export default function UsersModule({ initialUsers, currentUserId }: UsersModule
 
   const onCreate = async (values: CreateUserFormValues) => {
     try {
-      const response = await fetch("/api/users", {
+      const response = await fetchConDespertar("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -107,7 +108,7 @@ export default function UsersModule({ initialUsers, currentUserId }: UsersModule
     if (!ok) return;
 
     try {
-      const response = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
+      const response = await fetchConDespertar(`/api/users/${user.id}`, { method: "DELETE" });
 
       if (!response.ok) {
         const data = await response.json().catch(() => null);
@@ -300,7 +301,7 @@ function EditUserDialog({ user, isSelf, onClose, onSaved }: DialogProps & { isSe
 
   const onSubmit = async (values: UpdateUserFormValues) => {
     try {
-      const response = await fetch(`/api/users/${user.id}`, {
+      const response = await fetchConDespertar(`/api/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -362,7 +363,7 @@ function ResetPasswordDialog({ user, onClose, onSaved }: DialogProps) {
 
   const onSubmit = async (values: ResetPasswordFormValues) => {
     try {
-      const response = await fetch(`/api/users/${user.id}/reset-password`, {
+      const response = await fetchConDespertar(`/api/users/${user.id}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

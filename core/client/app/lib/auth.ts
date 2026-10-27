@@ -40,14 +40,21 @@ export async function getAuthToken(): Promise<string | null> {
   return cookieStore.get(AUTH_COOKIE)?.value ?? null;
 }
 
+export interface Session {
+  user: CurrentUser | null;
+  // The backend is asleep or starting (it scales to zero when idle): the
+  // session may well be valid, so callers shouldn't send the user to log in.
+  backendUnavailable: boolean;
+}
+
 // Wrapped in React's cache() so the layout, page, and any nested module can
 // all call this within the same request without triggering repeat network
 // calls to the backend.
-export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+export const getSession = cache(async (): Promise<Session> => {
   const token = await getAuthToken();
 
   if (!token) {
-    return null;
+    return { user: null, backendUnavailable: false };
   }
 
   try {
@@ -57,11 +64,15 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     });
 
     if (!response.ok) {
-      return null;
+      return { user: null, backendUnavailable: response.status >= 500 };
     }
 
-    return (await response.json()) as CurrentUser;
+    return { user: (await response.json()) as CurrentUser, backendUnavailable: false };
   } catch {
-    return null;
+    return { user: null, backendUnavailable: true };
   }
 });
+
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  return (await getSession()).user;
+}

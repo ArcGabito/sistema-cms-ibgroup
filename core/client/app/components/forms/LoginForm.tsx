@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { sileo } from "sileo";
 import { Eye, EyeOff, Lock, LogIn, User } from "lucide-react";
 import Button from "@/app/components/ui/Button";
 import { loginSchema, type LoginFormValues } from "@/app/lib/validations/auth";
+import { despertarServidor, fetchConDespertar } from "@/app/lib/despertar";
 
 interface LoginFormProps {
   // Demo credentials shown as placeholders so visitors know how to sign in.
@@ -25,9 +26,16 @@ export default function LoginForm({ demoUsername, demoPassword }: LoginFormProps
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
 
+  // Start waking the backend (it sleeps when idle) while the user types.
+  useEffect(() => {
+    void despertarServidor();
+  }, []);
+
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      const response = await fetch("/api/auth/login", {
+      // Joins the ping started on load if it's still waiting.
+      await despertarServidor();
+      const response = await fetchConDespertar("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

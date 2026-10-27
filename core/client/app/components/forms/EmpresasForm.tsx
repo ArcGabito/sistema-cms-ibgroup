@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { SelectField, TextField, TextareaField } from "@/app/components/forms/FormFields";
 import Button from "@/app/components/ui/Button";
 import { empresasContactSchema, type EmpresasContactValues } from "@/app/lib/validations/contact";
@@ -21,7 +22,7 @@ export default function EmpresasForm() {
 
   const onSubmit = async (data: EmpresasContactValues) => {
     try {
-      const response = await fetch("/api/contact", {
+      const response = await fetchConDespertar("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

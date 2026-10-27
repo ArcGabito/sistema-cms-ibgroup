@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { sileo } from "sileo";
+import { fetchConDespertar } from "@/app/lib/despertar";
 import { ClipboardList, Trash2 } from "lucide-react";
 import type { EmployabilityTestSubmission } from "@/app/lib/employability-tests";
 import { TEST_BLOCKS } from "@/app/lib/employability-test-data";
@@ -64,7 +65,7 @@ export default function TestModule({ initialSubmissions }: TestModuleProps) {
     if (!ok) return;
 
     try {
-      const response = await fetch(`/api/employability-test/${submission.id}`, { method: "DELETE" });
+      const response = await fetchConDespertar(`/api/employability-test/${submission.id}`, { method: "DELETE" });
 
       if (!response.ok) {
         sileo.error({ title: "No se pudo eliminar", description: "Inténtalo nuevamente." });
