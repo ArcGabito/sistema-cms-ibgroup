@@ -13,7 +13,7 @@ COMPOSE_FILE="docker/docker-compose.yml"
 # Compose interpolates the file's required ${VAR:?} placeholders even for a
 # `down`, which never uses their values. Placeholders keep it working when
 # .env is missing or incomplete (shell variables take precedence over it).
-export DB_SA_PASSWORD="placeholder" JWT_KEY="placeholder" SEED_ADMIN_PASSWORD="placeholder"
+export DB_SA_PASSWORD="placeholder" JWT_KEY="placeholder"
 
 ENV_FILE_ARGS=()
 [ -f ".env" ] && ENV_FILE_ARGS=(--env-file ".env")

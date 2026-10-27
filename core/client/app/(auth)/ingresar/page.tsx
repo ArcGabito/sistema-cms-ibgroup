@@ -9,11 +9,12 @@ export const metadata: Metadata = {
   description: "Ingresa a tu panel de IBOutplacement con tu usuario y contraseña.",
 };
 
-// This is a demo system: when DEMO_USERNAME / DEMO_PASSWORD are set (in Vercel),
-// the login form shows them as placeholders so visitors know how to get in.
-// The page is prerendered, so changing them takes a redeploy.
-const DEMO_USERNAME = process.env.DEMO_USERNAME?.trim() || undefined;
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD?.trim() || undefined;
+// This is a demo system: the login form shows the demo admin's credentials
+// (seeded by the backend from core/server/appsettings.json) as placeholders, so
+// visitors know how to get in. DEMO_USERNAME / DEMO_PASSWORD override them; the
+// page is prerendered, so changing those takes a redeploy.
+const DEMO_USERNAME = process.env.DEMO_USERNAME?.trim() || "admin";
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD?.trim() || "Admin123!";
 
 export default function IngresarPage() {
   return (

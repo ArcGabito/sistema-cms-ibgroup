@@ -34,9 +34,7 @@ services:
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in .env (repo root)}
       Jwt__Issuer: IBGroupCMS
       Jwt__Audience: IBGroupCMS
-      Seed__AdminUsername: ${SEED_ADMIN_USERNAME:-admin}
-      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env (repo root)}
-      Seed__AdminFullName: ${SEED_ADMIN_FULLNAME:-Administrador}
+      # The demo admin (admin / Admin123!) comes from core/server/appsettings.json.
       Ai__ApiKey: ${ANTHROPIC_API_KEY:-}
       Ai__Model: ${AI_MODEL:-claude-haiku-5-5}
       Uploads__Path: /app/uploads

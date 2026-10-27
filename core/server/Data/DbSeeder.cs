@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Server.Auth;
 using Server.Blog;
@@ -46,36 +47,48 @@ public static class DbSeeder
         await db.SaveChangesAsync();
     }
 
+    // This is a demo system with published credentials (appsettings.json), so
+    // every startup makes sure that admin account exists and works: Admin
+    // role, active, unlocked, with the configured password and no forced
+    // change. If a visitor changes or locks it, the next startup restores it.
     private static async Task<User> SeedAdminAsync(AppDbContext db, IConfiguration config)
     {
-        var existing = await db.Users.OrderBy(u => u.Id).FirstOrDefaultAsync();
-        if (existing is not null)
-        {
-            return existing;
-        }
-
         var username = config["Seed:AdminUsername"] ?? "admin";
         var password = config["Seed:AdminPassword"];
-        if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+        if (string.IsNullOrWhiteSpace(password) || password.Length < Passwords.MinLength)
         {
             throw new InvalidOperationException(
-                "Seed:AdminPassword is missing or shorter than 8 characters. Set it through the " +
-                "Seed__AdminPassword environment variable (SEED_ADMIN_PASSWORD in .env) to create the first admin.");
+                $"Seed:AdminPassword is missing or shorter than {Passwords.MinLength} characters (appsettings.json).");
         }
 
-        var fullName = config["Seed:AdminFullName"] ?? "Administrador";
+        var admin = await db.Users.SingleOrDefaultAsync(u => u.Username == username);
 
-        var admin = new User
+        if (admin is null)
         {
-            Username = username,
-            FullName = fullName,
-            Role = Roles.Admin,
-        };
+            admin = new User
+            {
+                Username = username,
+                FullName = config["Seed:AdminFullName"] ?? "Administrador",
+                Role = Roles.Admin,
+            };
+            Passwords.Set(admin, password, mustChange: false);
+            db.Users.Add(admin);
+            await db.SaveChangesAsync();
+            return admin;
+        }
 
-        // The seed password lives in .env, so the admin has to replace it on first login.
-        Passwords.Set(admin, password, mustChange: true);
+        // Only rewrites what drifted: resetting a password that still matches
+        // would rotate the security stamp and sign everyone out on each restart.
+        if (Passwords.Hasher.VerifyHashedPassword(admin, admin.PasswordHash, password) == PasswordVerificationResult.Failed)
+        {
+            Passwords.Set(admin, password, mustChange: false);
+        }
 
-        db.Users.Add(admin);
+        admin.Role = Roles.Admin;
+        admin.IsActive = true;
+        admin.MustChangePassword = false;
+        admin.FailedLoginCount = 0;
+        admin.LockoutEnd = null;
         await db.SaveChangesAsync();
 
         return admin;

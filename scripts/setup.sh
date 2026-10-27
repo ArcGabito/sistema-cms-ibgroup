@@ -62,17 +62,14 @@ if [ ! -f ".env" ]; then
     NEW_JWT_KEY="$(openssl rand -hex 32)"
     # SQL Server requires upper, lower, digits and a symbol; the suffix guarantees them.
     NEW_DB_SA_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9')Aa1!"
-    NEW_SEED_ADMIN_PASSWORD="$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9')"
     TMP_ENV="$(mktemp)"
     sed \
       -e "s#^JWT_KEY=.*#JWT_KEY=$NEW_JWT_KEY#" \
       -e "s#^DB_SA_PASSWORD=.*#DB_SA_PASSWORD=$NEW_DB_SA_PASSWORD#" \
-      -e "s#^SEED_ADMIN_PASSWORD=.*#SEED_ADMIN_PASSWORD=$NEW_SEED_ADMIN_PASSWORD#" \
       .env > "$TMP_ENV" && mv "$TMP_ENV" .env
-    log "Se generaron JWT_KEY, DB_SA_PASSWORD y SEED_ADMIN_PASSWORD únicos para esta instalación."
-    log "Contraseña inicial del usuario admin: $NEW_SEED_ADMIN_PASSWORD (queda guardada en .env; se pide cambiarla al ingresar)"
+    log "Se generaron JWT_KEY y DB_SA_PASSWORD únicos para esta instalación."
   else
-    warn "'openssl' no está disponible; completa JWT_KEY, DB_SA_PASSWORD y SEED_ADMIN_PASSWORD en .env antes de levantar el stack."
+    warn "'openssl' no está disponible; completa JWT_KEY y DB_SA_PASSWORD en .env antes de levantar el stack."
   fi
   warn "Revisa .env y ajusta las contraseñas antes de exponer este entorno fuera de tu máquina."
 else
@@ -101,6 +98,6 @@ docker compose -f "$COMPOSE_FILE" --env-file .env build --no-cache
 log "Levantando contenedores"
 docker compose -f "$COMPOSE_FILE" --env-file .env up -d
 
-log "Listo."
+log "Listo. Ingresa al panel en http://localhost:3000/ingresar con admin / Admin123!"
 echo "Backend:  http://localhost:8080"
 echo "Frontend: http://localhost:3000"
