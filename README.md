@@ -2,7 +2,7 @@
 
 ![Portada](core/client/public/assets/portada.png)
 
-Este repositorio contiene el ecosistema de servicios que conforman el CMS de IBGroup S.A.C. para la creación y gestión de contenido empresarial y promocional de sus servicios de outplacement.
+Este repositorio contiene el ecosistema de servicios que conforman el CMS de IBGroup S.A.C. para la creación y gestión de contenido empresarial y promocional de sus servicios de outplacement en Perú y LATAM.
 
 ----
 
