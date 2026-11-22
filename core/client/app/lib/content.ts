@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import { getAuthToken, BACKEND_URL } from "@/app/lib/auth";
+import { PUBLIC_CACHE_SECONDS } from "@/app/lib/public-cache";
 
 interface ContentBase {
   id: number;
@@ -61,7 +62,7 @@ export function isContentType(value: string): value is ContentType {
 }
 
 // Mutations through the dashboard revalidate this tag, so edits show up on
-// the site's next visit instead of waiting for the 60s window.
+// the site's next visit instead of waiting for the cache window.
 export const contentTag = (type: ContentType) => `content:${type}`;
 
 // Public: only visible items, in display order. connection() keeps calling
@@ -71,7 +72,7 @@ export async function getPublicContent<T extends ContentType>(type: T): Promise<
 
   try {
     const response = await fetch(`${BACKEND_URL}/api/content/${type}`, {
-      next: { revalidate: 60, tags: [contentTag(type)] },
+      next: { revalidate: PUBLIC_CACHE_SECONDS, tags: [contentTag(type)] },
     });
 
     if (!response.ok) {

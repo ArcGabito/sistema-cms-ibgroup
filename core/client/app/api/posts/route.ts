@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { postSchema } from "@/app/lib/validations/post";
+import { revalidateTag } from "next/cache";
 import { getAuthToken, BACKEND_URL } from "@/app/lib/auth";
+import { POSTS_TAG } from "@/app/lib/public-cache";
 
 export async function POST(request: NextRequest) {
   const token = await getAuthToken();
@@ -45,5 +47,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // The public blog shows the change on its next visit.
+  revalidateTag(POSTS_TAG, { expire: 0 });
   return NextResponse.json(data, { status: 201 });
 }
