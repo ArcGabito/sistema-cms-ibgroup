@@ -9,5 +9,5 @@ Este repositorio contiene el ecosistema de servicios que conforman el CMS de IBG
 #### Instala el proyecto en local:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ArcGabito/sistema-cms-ibgroup/master/scripts/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ArcGabito/sistema-cms-ibgroup/main/scripts/setup.sh | bash
 ```
