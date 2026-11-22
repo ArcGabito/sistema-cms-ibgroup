@@ -13,11 +13,10 @@ import { despertarServidor, fetchConDespertar } from "@/app/lib/despertar";
 
 interface LoginFormProps {
   // Demo credentials shown as placeholders so visitors know how to sign in.
-  demoUsername?: string;
-  demoPassword?: string;
+  demo?: { username: string; password: string };
 }
 
-export default function LoginForm({ demoUsername, demoPassword }: LoginFormProps) {
+export default function LoginForm({ demo }: LoginFormProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const {
@@ -77,6 +76,12 @@ export default function LoginForm({ demoUsername, demoPassword }: LoginFormProps
         </p>
       </div>
 
+      {demo && (
+        <p className="mt-6 rounded-md border border-black/10 bg-black/[0.03] px-4 py-3 text-sm text-ink/70">
+          <span className="font-semibold text-ink">Demo:</span> usa las credenciales que aparecen en los campos.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 flex flex-col gap-5">
         <div>
           <label className="mb-1.5 block text-[11px] font-semibold tracking-wider text-ink/50 uppercase">
@@ -87,7 +92,7 @@ export default function LoginForm({ demoUsername, demoPassword }: LoginFormProps
             <input
               type="text"
               autoComplete="username"
-              placeholder={demoUsername ?? "tu.usuario"}
+              placeholder={demo?.username ?? "tu.usuario"}
               className="w-full rounded-md border border-black/10 bg-white py-3 pr-4 pl-11 text-sm text-ink outline-none transition-colors focus:border-brand"
               {...register("usuario")}
             />
@@ -104,7 +109,7 @@ export default function LoginForm({ demoUsername, demoPassword }: LoginFormProps
             <input
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
-              placeholder={demoPassword ?? "••••••••"}
+              placeholder={demo?.password ?? "••••••••"}
               className="w-full rounded-md border border-black/10 bg-white py-3 pr-11 pl-11 text-sm text-ink outline-none transition-colors focus:border-brand"
               {...register("contrasena")}
             />

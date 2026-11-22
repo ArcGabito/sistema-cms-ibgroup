@@ -17,7 +17,9 @@ public record UserResponse(
     string Role,
     bool IsActive,
     bool MustChangePassword,
-    DateTime? LockoutEnd)
+    DateTime? LockoutEnd,
+    // The public demo's account (DemoAccount): the panel shows what it can't do.
+    bool IsDemo = false)
 {
     public static UserResponse From(User u) => new(
         u.Id,
@@ -43,7 +45,7 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth");
 
-        group.MapPost("/login", async (LoginRequest request, AppDbContext db, JwtTokenService tokenService) =>
+        group.MapPost("/login", async (LoginRequest request, AppDbContext db, JwtTokenService tokenService, IConfiguration config) =>
         {
             if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrEmpty(request.Password))
             {
@@ -71,6 +73,13 @@ public static class AuthEndpoints
 
             if (verification == PasswordVerificationResult.Failed)
             {
+                // The demo's password is public: locking it would only let one
+                // visitor shut the others out.
+                if (DemoAccount.Is(config, user.Username))
+                {
+                    return Results.Unauthorized();
+                }
+
                 user.FailedLoginCount++;
                 if (user.FailedLoginCount >= MaxFailedAttempts)
                 {
@@ -94,13 +103,16 @@ public static class AuthEndpoints
             await db.SaveChangesAsync();
 
             var (token, expiresAt) = tokenService.CreateToken(user);
-            return Results.Ok(new LoginResponse(token, expiresAt, UserResponse.From(user)));
+            return Results.Ok(new LoginResponse(
+                token, expiresAt, UserResponse.From(user) with { IsDemo = DemoAccount.Is(config, user.Username) }));
         }).RequireRateLimiting(RateLimiting.Login);
 
-        group.MapGet("/me", async (ClaimsPrincipal principal, AppDbContext db) =>
+        group.MapGet("/me", async (ClaimsPrincipal principal, AppDbContext db, IConfiguration config) =>
         {
             var user = await db.Users.FindAsync(GetUserId(principal));
-            return user is null ? Results.Unauthorized() : Results.Ok(UserResponse.From(user));
+            return user is null
+                ? Results.Unauthorized()
+                : Results.Ok(UserResponse.From(user) with { IsDemo = DemoAccount.Is(config, user.Username) });
         }).RequireAuthorization();
 
         // Any signed-in user, including one forced to change their password.
@@ -110,12 +122,19 @@ public static class AuthEndpoints
             ChangePasswordRequest request,
             ClaimsPrincipal principal,
             AppDbContext db,
-            JwtTokenService tokenService) =>
+            JwtTokenService tokenService,
+            IConfiguration config) =>
         {
             var user = await db.Users.FindAsync(GetUserId(principal));
             if (user is null)
             {
                 return Results.Unauthorized();
+            }
+
+            // Its credentials are on the sign-in page for every visitor.
+            if (DemoAccount.Is(config, user.Username))
+            {
+                return Results.BadRequest(new { message = "La cuenta de demostración no puede cambiar su contraseña." });
             }
 
             var verification = Passwords.Hasher.VerifyHashedPassword(

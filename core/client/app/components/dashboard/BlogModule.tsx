@@ -19,6 +19,9 @@ import MarkdownEditor from "@/app/components/dashboard/ui/MarkdownEditor";
 
 interface BlogModuleProps {
   initialPosts: Post[];
+  // Set for the public demo's account: its posts stay drafts and it only
+  // edits or deletes its own (the API enforces both).
+  demoUserId?: number;
 }
 
 const EMPTY_VALUES: PostFormValues = {
@@ -29,7 +32,9 @@ const EMPTY_VALUES: PostFormValues = {
   published: false,
 };
 
-export default function BlogModule({ initialPosts }: BlogModuleProps) {
+export default function BlogModule({ initialPosts, demoUserId }: BlogModuleProps) {
+  const isDemo = demoUserId !== undefined;
+  const canChange = (post: Post) => !isDemo || post.authorId === demoUserId;
   const [posts, setPosts] = useState(initialPosts);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
@@ -188,14 +193,18 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
               />
             )}
           />
-          <label className="flex items-center gap-2 text-sm text-ink/70">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-black/20 text-brand"
-              {...register("published")}
-            />
-            Publicado
-          </label>
+          {isDemo ? (
+            <p className="text-sm text-ink/60">En la demo los posts se guardan como borrador: no se publican en el sitio.</p>
+          ) : (
+            <label className="flex items-center gap-2 text-sm text-ink/70">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-black/20 text-brand"
+                {...register("published")}
+              />
+              Publicado
+            </label>
+          )}
           <Button type="submit" disabled={isSubmitting} className="mt-2">
             {isSubmitting ? "Guardando..." : editingId ? "Guardar cambios" : "Crear post"}
           </Button>
@@ -251,24 +260,26 @@ export default function BlogModule({ initialPosts }: BlogModuleProps) {
                       </Badge>
                     </td>
                     <td className="py-3">
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          aria-label="Editar"
-                          onClick={() => startEdit(post)}
-                          className="text-ink/40 hover:text-ink"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Eliminar"
-                          onClick={() => handleDelete(post)}
-                          className="text-ink/40 hover:text-brand"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      {canChange(post) && (
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            aria-label="Editar"
+                            onClick={() => startEdit(post)}
+                            className="text-ink/40 hover:text-ink"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Eliminar"
+                            onClick={() => handleDelete(post)}
+                            className="text-ink/40 hover:text-brand"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

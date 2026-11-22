@@ -34,7 +34,12 @@ services:
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in .env (repo root)}
       Jwt__Issuer: IBGroupCMS
       Jwt__Audience: IBGroupCMS
-      # The demo admin (admin / Admin123!) comes from core/server/appsettings.json.
+      # Private admin password (Seed:AdminPassword). Empty keeps the existing
+      # admin as it is; a new database needs it to create one.
+      Seed__AdminPassword: ${ADMIN_PASSWORD:-}
+      # Public demo account (an Editor); empty DEMO_USERNAME = no demo account.
+      Seed__DemoUsername: ${DEMO_USERNAME-demo}
+      Seed__DemoPassword: ${DEMO_PASSWORD-Demo2026!}
       Ai__ApiKey: ${ANTHROPIC_API_KEY:-}
       Ai__Model: ${AI_MODEL:-claude-haiku-5-5}
       Uploads__Path: /app/uploads
@@ -50,6 +55,10 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.client
+      args:
+        # Shown on /ingresar, which is prerendered during the build.
+        DEMO_USERNAME: ${DEMO_USERNAME-demo}
+        DEMO_PASSWORD: ${DEMO_PASSWORD-Demo2026!}
     container_name: ibgroup-client
     environment:
       BACKEND_URL: http://server:8080

@@ -9,6 +9,10 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY core/client/ .
+# Demo credentials shown on /ingresar (empty = not shown). Only read while
+# prerendering that page.
+ARG DEMO_USERNAME=""
+ARG DEMO_PASSWORD=""
 RUN npm run build
 
 FROM node:22-alpine AS runtime

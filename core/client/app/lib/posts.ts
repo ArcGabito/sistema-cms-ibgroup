@@ -10,6 +10,7 @@ export interface Post {
   imageUrl: string | null;
   published: boolean;
   authorName: string;
+  authorId: number;
   createdAt: string;
   updatedAt: string;
 }

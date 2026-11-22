@@ -42,7 +42,7 @@ public static class PostsEndpoints
             return post is null ? Results.NotFound() : Results.Ok(ToResponse(post));
         });
 
-        group.MapPost("/", async (CreatePostRequest request, AppDbContext db, ClaimsPrincipal principal) =>
+        group.MapPost("/", async (CreatePostRequest request, AppDbContext db, ClaimsPrincipal principal, IConfiguration config) =>
         {
             var validation = Validate(request.Title, request.Excerpt, request.Content);
             if (validation is not null)
@@ -57,7 +57,8 @@ public static class PostsEndpoints
                 Excerpt = request.Excerpt,
                 Content = request.Content,
                 ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl,
-                Published = request.Published,
+                // The demo's posts never reach the public site.
+                Published = request.Published && !DemoAccount.Is(config, principal),
                 AuthorId = GetUserId(principal),
             };
 
@@ -68,7 +69,7 @@ public static class PostsEndpoints
             return Results.Created($"/api/posts/{post.Id}", ToResponse(post));
         }).RequireAuthorization(Policies.ContentEditor);
 
-        group.MapPut("/{id:int}", async (int id, UpdatePostRequest request, AppDbContext db) =>
+        group.MapPut("/{id:int}", async (int id, UpdatePostRequest request, AppDbContext db, ClaimsPrincipal principal, IConfiguration config) =>
         {
             var validation = Validate(request.Title, request.Excerpt, request.Content);
             if (validation is not null)
@@ -82,11 +83,17 @@ public static class PostsEndpoints
                 return Results.NotFound();
             }
 
+            var demo = DemoAccount.Is(config, principal);
+            if (demo && post.AuthorId != GetUserId(principal))
+            {
+                return Results.Json(new { message = DemoAccount.OwnDraftsOnly }, statusCode: StatusCodes.Status403Forbidden);
+            }
+
             post.Title = request.Title;
             post.Excerpt = request.Excerpt;
             post.Content = request.Content;
             post.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl;
-            post.Published = request.Published;
+            post.Published = request.Published && !demo;
             post.UpdatedAt = DateTime.UtcNow;
 
             await db.SaveChangesAsync();
@@ -94,12 +101,17 @@ public static class PostsEndpoints
             return Results.Ok(ToResponse(post));
         }).RequireAuthorization(Policies.ContentEditor);
 
-        group.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
+        group.MapDelete("/{id:int}", async (int id, AppDbContext db, ClaimsPrincipal principal, IConfiguration config) =>
         {
             var post = await db.Posts.FindAsync(id);
             if (post is null)
             {
                 return Results.NotFound();
+            }
+
+            if (DemoAccount.Is(config, principal) && post.AuthorId != GetUserId(principal))
+            {
+                return Results.Json(new { message = DemoAccount.OwnDraftsOnly }, statusCode: StatusCodes.Status403Forbidden);
             }
 
             db.Posts.Remove(post);
@@ -112,11 +124,22 @@ public static class PostsEndpoints
             GeneratePostRequest request,
             AppDbContext db,
             ClaimsPrincipal principal,
-            AiDraftGenerator generator) =>
+            AiDraftGenerator generator,
+            IConfiguration config,
+            DemoAiQuota demoQuota) =>
         {
             if (string.IsNullOrWhiteSpace(request.Topic))
             {
                 return Results.BadRequest(new { message = "Ingresa un tema para generar el borrador." });
+            }
+
+            // Each draft is a paid API call: the public demo gets a few a day.
+            var demo = DemoAccount.Is(config, principal);
+            if (demo && !demoQuota.TryTake())
+            {
+                return Results.Problem(
+                    detail: $"La demo permite {DemoAiQuota.DailyLimit} borradores con IA por día. Vuelve a intentarlo mañana.",
+                    statusCode: StatusCodes.Status429TooManyRequests);
             }
 
             AiDraft draft;
@@ -126,12 +149,14 @@ public static class PostsEndpoints
             }
             catch (AiNotConfiguredException)
             {
+                if (demo) demoQuota.GiveBack();
                 return Results.Problem(
                     detail: "La generación con IA no está configurada. Define ANTHROPIC_API_KEY en el servidor.",
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
             catch (Exception ex)
             {
+                if (demo) demoQuota.GiveBack();
                 return Results.Problem(
                     detail: $"No se pudo generar el borrador: {ex.Message}",
                     statusCode: StatusCodes.Status502BadGateway);
@@ -193,5 +218,6 @@ public static class PostsEndpoints
         p.Published,
         p.Author?.FullName ?? "—",
         p.CreatedAt,
-        p.UpdatedAt);
+        p.UpdatedAt,
+        p.AuthorId);
 }

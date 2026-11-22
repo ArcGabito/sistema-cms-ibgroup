@@ -9,12 +9,13 @@ export const metadata: Metadata = {
   description: "Ingresa a tu panel de IBOutplacement con tu usuario y contraseña.",
 };
 
-// This is a demo system: the login form shows the demo admin's credentials
-// (seeded by the backend from core/server/appsettings.json) as placeholders, so
-// visitors know how to get in. DEMO_USERNAME / DEMO_PASSWORD override them; the
-// page is prerendered, so changing those takes a redeploy.
-const DEMO_USERNAME = process.env.DEMO_USERNAME?.trim() || "admin";
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD?.trim() || "Admin123!";
+// Public demo: the form shows the demo account's credentials (an Editor the
+// backend seeds from Seed:DemoUsername / Seed:DemoPassword) as placeholders, so
+// visitors know how to get in. Without DEMO_USERNAME and DEMO_PASSWORD nothing
+// is shown; the page is prerendered, so changing them takes a redeploy.
+const DEMO_USERNAME = process.env.DEMO_USERNAME?.trim();
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD?.trim();
+const DEMO = DEMO_USERNAME && DEMO_PASSWORD ? { username: DEMO_USERNAME, password: DEMO_PASSWORD } : undefined;
 
 export default function IngresarPage() {
   return (
@@ -57,7 +58,7 @@ export default function IngresarPage() {
         </Link>
 
         <div className="flex flex-1 items-center justify-center">
-          <LoginForm demoUsername={DEMO_USERNAME} demoPassword={DEMO_PASSWORD} />
+          <LoginForm demo={DEMO} />
         </div>
       </div>
     </div>

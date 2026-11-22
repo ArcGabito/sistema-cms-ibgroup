@@ -10,7 +10,8 @@ public record PostResponse(
     bool Published,
     string AuthorName,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    int AuthorId);
 
 public record CreatePostRequest(string Title, string Excerpt, string Content, string? ImageUrl, bool Published);
 
