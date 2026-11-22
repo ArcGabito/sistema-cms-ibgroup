@@ -41,6 +41,7 @@ builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddHttpClient();
 builder.Services.Configure<AiOptions>(builder.Configuration.GetSection(AiOptions.SectionName));
 builder.Services.AddScoped<AiDraftGenerator>();
+builder.Services.AddSingleton<DemoAiQuota>();
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Missing Jwt configuration section.");
@@ -89,7 +90,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(db, app.Configuration);
+    await DbSeeder.SeedAsync(db, app.Configuration, app.Logger);
 }
 
 // Configure the HTTP request pipeline.

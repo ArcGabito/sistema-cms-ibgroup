@@ -13,6 +13,8 @@ export interface CurrentUser {
   isActive: boolean;
   mustChangePassword: boolean;
   lockoutEnd: string | null;
+  // The public demo's account: its posts stay drafts and the site's content is read-only.
+  isDemo?: boolean;
 }
 
 export interface AuthTokenResponse {

@@ -8,9 +8,10 @@ namespace Server.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext db, IConfiguration config)
+    public static async Task SeedAsync(AppDbContext db, IConfiguration config, ILogger logger)
     {
-        var author = await SeedAdminAsync(db, config);
+        var author = await SeedAdminAsync(db, config, logger);
+        await SeedDemoAsync(db, config, logger);
         await SeedBlogPostsAsync(db, author);
         await SeedClientsAsync(db);
         await SeedContentAsync(db, db.Services, ContentSeedData.Services());
@@ -47,21 +48,36 @@ public static class DbSeeder
         await db.SaveChangesAsync();
     }
 
-    // This is a demo system with published credentials (appsettings.json), so
-    // every startup makes sure that admin account exists and works: Admin
-    // role, active, unlocked, with the configured password and no forced
-    // change. If a visitor changes or locks it, the next startup restores it.
-    private static async Task<User> SeedAdminAsync(AppDbContext db, IConfiguration config)
+    // The admin's password is private: it comes from Seed:AdminPassword
+    // (ADMIN_PASSWORD in .env, Seed__AdminPassword on the server), never from
+    // the repository — visitors sign in with the demo account instead. When
+    // it's set, every startup makes sure that admin exists and works: Admin
+    // role, active, unlocked, with that password and no forced change, so
+    // rotating it is just changing the setting. Without it an existing admin
+    // is left as it is, and a database without one can't start.
+    private static async Task<User> SeedAdminAsync(AppDbContext db, IConfiguration config, ILogger logger)
     {
         var username = config["Seed:AdminUsername"] ?? "admin";
         var password = config["Seed:AdminPassword"];
-        if (string.IsNullOrWhiteSpace(password) || password.Length < Passwords.MinLength)
+        var admin = await db.Users.SingleOrDefaultAsync(u => u.Username == username);
+
+        if (string.IsNullOrWhiteSpace(password))
         {
-            throw new InvalidOperationException(
-                $"Seed:AdminPassword is missing or shorter than {Passwords.MinLength} characters (appsettings.json).");
+            if (admin is null)
+            {
+                throw new InvalidOperationException(
+                    "Seed:AdminPassword is missing: set ADMIN_PASSWORD in .env (Seed__AdminPassword on the server) to create the admin.");
+            }
+
+            logger.LogWarning("Seed:AdminPassword is not set; the admin '{Username}' keeps its current password.", username);
+            return admin;
         }
 
-        var admin = await db.Users.SingleOrDefaultAsync(u => u.Username == username);
+        if (password.Length < Passwords.MinLength)
+        {
+            throw new InvalidOperationException(
+                $"Seed:AdminPassword is shorter than {Passwords.MinLength} characters.");
+        }
 
         if (admin is null)
         {
@@ -92,6 +108,57 @@ public static class DbSeeder
         await db.SaveChangesAsync();
 
         return admin;
+    }
+
+    // The public demo's account (Auth/DemoAccount.cs): every startup creates
+    // or restores it as an active, unlocked Editor with the configured
+    // password, so whatever a visitor did to it doesn't reach the next one.
+    private static async Task SeedDemoAsync(AppDbContext db, IConfiguration config, ILogger logger)
+    {
+        if (DemoAccount.Username(config) is not { } username)
+        {
+            return;
+        }
+
+        var password = config["Seed:DemoPassword"]!;
+        if (password.Length < Passwords.MinLength)
+        {
+            logger.LogError("Seed:DemoPassword is shorter than {MinLength} characters; the demo account isn't created.", Passwords.MinLength);
+            return;
+        }
+
+        var demo = await db.Users.SingleOrDefaultAsync(u => u.Username == username);
+        var fullName = config["Seed:DemoFullName"] ?? "Usuario Demo";
+
+        if (demo is null)
+        {
+            demo = new User { Username = username, FullName = fullName, Role = Roles.Editor };
+            Passwords.Set(demo, password, mustChange: false);
+            db.Users.Add(demo);
+            await db.SaveChangesAsync();
+            return;
+        }
+
+        // A misconfigured username must never demote a real admin.
+        if (demo.Role == Roles.Admin)
+        {
+            logger.LogError("Seed:DemoUsername '{Username}' belongs to an admin; it isn't used as the demo account.", username);
+            return;
+        }
+
+        // Only rewrites what drifted, like the admin above.
+        if (Passwords.Hasher.VerifyHashedPassword(demo, demo.PasswordHash, password) == PasswordVerificationResult.Failed)
+        {
+            Passwords.Set(demo, password, mustChange: false);
+        }
+
+        demo.FullName = fullName;
+        demo.Role = Roles.Editor;
+        demo.IsActive = true;
+        demo.MustChangePassword = false;
+        demo.FailedLoginCount = 0;
+        demo.LockoutEnd = null;
+        await db.SaveChangesAsync();
     }
 
     private static async Task SeedBlogPostsAsync(AppDbContext db, User author)

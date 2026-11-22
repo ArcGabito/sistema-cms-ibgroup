@@ -101,7 +101,8 @@ async function send(url: string, method: string, body?: unknown) {
   return { ok: response.ok, data };
 }
 
-export default function ContentModule({ initial }: { initial: ContentItems }) {
+// readOnly: the public demo's account, which can't change the public site (the API refuses it too).
+export default function ContentModule({ initial, readOnly = false }: { initial: ContentItems; readOnly?: boolean }) {
   const [tab, setTab] = useState<ContentType>("services");
   const [items, setItems] = useState<ContentItems>(initial);
 
@@ -127,6 +128,7 @@ export default function ContentModule({ initial }: { initial: ContentItems }) {
       <ContentList
         key={tab}
         type={tab}
+        readOnly={readOnly}
         items={items[tab]}
         onChange={(next) => setItems((prev) => ({ ...prev, [tab]: next }))}
       />
@@ -136,11 +138,12 @@ export default function ContentModule({ initial }: { initial: ContentItems }) {
 
 interface ContentListProps<K extends ContentType> {
   type: K;
+  readOnly: boolean;
   items: ContentTypes[K][];
   onChange: (items: ContentTypes[K][]) => void;
 }
 
-function ContentList<K extends ContentType>({ type, items, onChange }: ContentListProps<K>) {
+function ContentList<K extends ContentType>({ type, readOnly, items, onChange }: ContentListProps<K>) {
   const config = TABS[type] as unknown as TabConfig<ContentTypes[K]>;
   const [editing, setEditing] = useState<ContentTypes[K] | "new" | null>(null);
   const [busy, setBusy] = useState(false);
@@ -246,9 +249,13 @@ function ContentList<K extends ContentType>({ type, items, onChange }: ContentLi
             Ver en el sitio <ExternalLink className="h-3 w-3" />
           </a>
         </div>
-        <Button type="button" onClick={() => setEditing("new")} className="px-5 py-2.5">
-          <Plus className="h-4 w-4" /> Nuevo {config.singular}
-        </Button>
+        {readOnly ? (
+          <p className="text-sm text-ink/60">En la demo, el contenido del sitio es de solo lectura.</p>
+        ) : (
+          <Button type="button" onClick={() => setEditing("new")} className="px-5 py-2.5">
+            <Plus className="h-4 w-4" /> Nuevo {config.singular}
+          </Button>
+        )}
       </div>
 
       {items.length === 0 ? (
@@ -257,18 +264,20 @@ function ContentList<K extends ContentType>({ type, items, onChange }: ContentLi
         <ul className="mt-5 flex flex-col divide-y divide-black/5">
           {items.map((item, index) => (
             <li key={item.id} className="flex items-start gap-3 py-3">
-              <div className="flex shrink-0 flex-col">
-                <IconButton label="Subir" disabled={busy || index === 0} onClick={() => move(index, -1)}>
-                  <ArrowUp className="h-4 w-4" />
-                </IconButton>
-                <IconButton
-                  label="Bajar"
-                  disabled={busy || index === items.length - 1}
-                  onClick={() => move(index, 1)}
-                >
-                  <ArrowDown className="h-4 w-4" />
-                </IconButton>
-              </div>
+              {!readOnly && (
+                <div className="flex shrink-0 flex-col">
+                  <IconButton label="Subir" disabled={busy || index === 0} onClick={() => move(index, -1)}>
+                    <ArrowUp className="h-4 w-4" />
+                  </IconButton>
+                  <IconButton
+                    label="Bajar"
+                    disabled={busy || index === items.length - 1}
+                    onClick={() => move(index, 1)}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </IconButton>
+                </div>
+              )}
               <div className={`min-w-0 flex-1 ${item.isVisible ? "" : "opacity-50"}`}>
                 <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">
                   {config.title(item)}
@@ -276,21 +285,23 @@ function ContentList<K extends ContentType>({ type, items, onChange }: ContentLi
                 </p>
                 <div className="mt-1 text-xs text-ink/50">{config.summary(item)}</div>
               </div>
-              <div className="flex shrink-0 gap-1">
-                <IconButton
-                  label={item.isVisible ? "Ocultar" : "Mostrar"}
-                  disabled={busy}
-                  onClick={() => toggleVisible(item)}
-                >
-                  {item.isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </IconButton>
-                <IconButton label="Editar" onClick={() => setEditing(item)}>
-                  <Pencil className="h-4 w-4" />
-                </IconButton>
-                <IconButton label="Eliminar" onClick={() => remove(item)}>
-                  <Trash2 className="h-4 w-4" />
-                </IconButton>
-              </div>
+              {!readOnly && (
+                <div className="flex shrink-0 gap-1">
+                  <IconButton
+                    label={item.isVisible ? "Ocultar" : "Mostrar"}
+                    disabled={busy}
+                    onClick={() => toggleVisible(item)}
+                  >
+                    {item.isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </IconButton>
+                  <IconButton label="Editar" onClick={() => setEditing(item)}>
+                    <Pencil className="h-4 w-4" />
+                  </IconButton>
+                  <IconButton label="Eliminar" onClick={() => remove(item)}>
+                    <Trash2 className="h-4 w-4" />
+                  </IconButton>
+                </div>
+              )}
             </li>
           ))}
         </ul>

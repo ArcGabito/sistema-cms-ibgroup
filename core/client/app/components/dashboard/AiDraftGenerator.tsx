@@ -30,7 +30,8 @@ const STEPS = [
   },
 ];
 
-export default function AiDraftGenerator() {
+// isDemo: the public demo's account, which gets a few drafts a day (each one is a paid API call).
+export default function AiDraftGenerator({ isDemo = false }: { isDemo?: boolean }) {
   const [lastDraft, setLastDraft] = useState<Post | null>(null);
   const {
     register,
@@ -81,6 +82,9 @@ export default function AiDraftGenerator() {
             Describe un tema y la IA redactará un borrador de artículo. Se guarda como post sin
             publicar en el módulo Blog, donde puedes revisarlo, editarlo y publicarlo.
           </p>
+          {isDemo && (
+            <p className="mt-2 text-sm text-ink/60">En la demo hay un límite diario de borradores generados con IA.</p>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
             <TextField

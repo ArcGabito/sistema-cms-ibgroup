@@ -62,7 +62,7 @@ public static class ContentEndpoints
             await db.SaveChangesAsync();
 
             return Results.Created($"/api/content/{name}/{entity.Id}", entity);
-        }).RequireAuthorization(Policies.ContentEditor);
+        }).RequireAuthorization(Policies.ContentEditor).DeniedToDemo(DemoAccount.ContentReadOnly);
 
         items.MapPut("/{id:int}", async (int id, TRequest request, AppDbContext db) =>
         {
@@ -83,7 +83,7 @@ public static class ContentEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(entity);
-        }).RequireAuthorization(Policies.ContentEditor);
+        }).RequireAuthorization(Policies.ContentEditor).DeniedToDemo(DemoAccount.ContentReadOnly);
 
         items.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
         {
@@ -97,7 +97,7 @@ public static class ContentEndpoints
             await db.SaveChangesAsync();
 
             return Results.NoContent();
-        }).RequireAuthorization(Policies.ContentEditor);
+        }).RequireAuthorization(Policies.ContentEditor).DeniedToDemo(DemoAccount.ContentReadOnly);
 
         items.MapPut("/order", async (int[] ids, AppDbContext db) =>
         {
@@ -119,6 +119,6 @@ public static class ContentEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(all.OrderBy(i => i.SortOrder));
-        }).RequireAuthorization(Policies.ContentEditor);
+        }).RequireAuthorization(Policies.ContentEditor).DeniedToDemo(DemoAccount.ContentReadOnly);
     }
 }
