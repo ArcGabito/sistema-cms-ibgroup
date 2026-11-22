@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { postSchema } from "@/app/lib/validations/post";
+import { revalidateTag } from "next/cache";
 import { getAuthToken, BACKEND_URL } from "@/app/lib/auth";
+import { POSTS_TAG } from "@/app/lib/public-cache";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -46,6 +48,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     );
   }
 
+  // The public blog shows the change on its next visit.
+  revalidateTag(POSTS_TAG, { expire: 0 });
   return NextResponse.json(data);
 }
 
@@ -74,5 +78,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ message: "No se pudo eliminar el post." }, { status: backendResponse.status });
   }
 
+  revalidateTag(POSTS_TAG, { expire: 0 });
   return new NextResponse(null, { status: 204 });
 }

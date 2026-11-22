@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import { getAuthToken, BACKEND_URL } from "@/app/lib/auth";
+import { POSTS_TAG, PUBLIC_CACHE_SECONDS } from "@/app/lib/public-cache";
 
 export interface Post {
   id: number;
@@ -39,11 +40,15 @@ export async function getPosts(): Promise<Post[]> {
 }
 
 // Public: returns null for unknown slugs and for drafts (the backend never
-// serves drafts on this endpoint).
+// serves drafts on this endpoint). connection() renders the article per request
+// instead of caching the page: a not-found answer while the backend wakes up
+// would otherwise stay cached for the whole window.
 export async function getPublishedPostBySlug(slug: string): Promise<Post | null> {
+  await connection();
+
   try {
     const response = await fetch(`${BACKEND_URL}/api/posts/slug/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: PUBLIC_CACHE_SECONDS, tags: [POSTS_TAG] },
     });
 
     if (!response.ok) {
@@ -63,12 +68,14 @@ export async function getPublishedPostBySlug(slug: string): Promise<Post | null>
 // backend isn't reachable while the image is built, so a prerendered page
 // would ship with an empty post list until its first revalidation. The pages
 // now render per request, while the fetch itself stays in Next's data cache
-// for 60s so the backend isn't hit on every visit.
+// (lib/public-cache.ts) so the backend isn't hit on every visit.
 export async function getPublishedPosts(): Promise<Post[]> {
   await connection();
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/posts`, { next: { revalidate: 60 } });
+    const response = await fetch(`${BACKEND_URL}/api/posts`, {
+      next: { revalidate: PUBLIC_CACHE_SECONDS, tags: [POSTS_TAG] },
+    });
 
     if (!response.ok) {
       return [];
