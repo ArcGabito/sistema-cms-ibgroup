@@ -22,6 +22,7 @@ export default function LoginForm({ demo }: LoginFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
 
@@ -64,6 +65,14 @@ export default function LoginForm({ demo }: LoginFormProps) {
     }
   };
 
+  // One click: fills in the demo account and signs in.
+  const enterDemo = () => {
+    if (!demo) return;
+    setValue("usuario", demo.username);
+    setValue("contrasena", demo.password);
+    void handleSubmit(onSubmit)();
+  };
+
   return (
     <div className="w-full max-w-lg">
       <div className="flex flex-col items-center text-center">
@@ -78,7 +87,7 @@ export default function LoginForm({ demo }: LoginFormProps) {
 
       {demo && (
         <p className="mt-6 rounded-md border border-black/10 bg-black/[0.03] px-4 py-3 text-sm text-ink/70">
-          <span className="font-semibold text-ink">Demo:</span> usa las credenciales que aparecen en los campos.
+          <span className="font-semibold text-ink">Demo:</span> usa el botón «Entrar a la demo» o las credenciales que aparecen en los campos.
         </p>
       )}
 
@@ -130,6 +139,11 @@ export default function LoginForm({ demo }: LoginFormProps) {
         <Button type="submit" disabled={isSubmitting} className="mt-2 w-full">
           {isSubmitting ? "Ingresando..." : "Ingresar"}
         </Button>
+        {demo && (
+          <Button type="button" variant="outline" disabled={isSubmitting} onClick={enterDemo} className="w-full">
+            Entrar a la demo
+          </Button>
+        )}
       </form>
 
       <p className="mt-8 text-center text-xs text-ink/50">
